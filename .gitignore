@@ -1,0 +1,18 @@
+# Arduino / PlatformIO / IDE
+*.hex
+*.bin
+*.elf
+*.o
+*.a
+*.d
+*.log
+build/
+.vscode/
+.idea/
+*.tmp
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
