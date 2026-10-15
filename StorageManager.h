@@ -19,7 +19,8 @@ struct GatePreset {
   uint32_t codeOff;
   bool state;
   bool isRaw;
-  char rawData[256];
+  uint8_t rawCount;
+  uint16_t rawTimings[150];
 };
 
 struct DeviceSettings {

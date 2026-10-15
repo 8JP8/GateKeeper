@@ -206,7 +206,12 @@ void WebHandler::handleGetPresets() {
     obj["code_off"] = p->codeOff;
     obj["state"] = p->state;
     obj["raw"] = p->isRaw;
-    obj["raw_data"] = p->rawData;
+    if (p->isRaw && p->rawCount > 0) {
+      JsonArray rawArr = obj["raw_data"].to<JsonArray>();
+      for (uint8_t j = 0; j < p->rawCount; j++) {
+        rawArr.add(p->rawTimings[j]);
+      }
+    }
   }
 
   String out;
@@ -241,9 +246,14 @@ void WebHandler::handleAddPreset() {
   p.codeOff = doc["code_off"] | 0;
   p.state = false;
   p.isRaw = doc["raw"] | false;
-  if (doc.containsKey("raw_data")) {
-    const char* rd = doc["raw_data"];
-    if (rd) strncpy(p.rawData, rd, sizeof(p.rawData) - 1);
+  p.rawCount = 0;
+  if (doc.containsKey("raw_data") && doc["raw_data"].is<JsonArray>()) {
+    JsonArray arr = doc["raw_data"];
+    for (uint16_t x : arr) {
+      if (p.rawCount < 150) {
+        p.rawTimings[p.rawCount++] = x;
+      }
+    }
   }
 
   bool ok = storage.addPreset(p);
@@ -284,9 +294,14 @@ void WebHandler::handleUpdatePreset() {
   if (doc.containsKey("toggle")) p.isToggle = doc["toggle"];
   if (doc.containsKey("code_off")) p.codeOff = doc["code_off"];
   if (doc.containsKey("raw")) p.isRaw = doc["raw"];
-  if (doc.containsKey("raw_data")) {
-    const char* rd = doc["raw_data"];
-    if (rd) strncpy(p.rawData, rd, sizeof(p.rawData) - 1);
+  if (doc.containsKey("raw_data") && doc["raw_data"].is<JsonArray>()) {
+    p.rawCount = 0;
+    JsonArray arr = doc["raw_data"];
+    for (uint16_t x : arr) {
+      if (p.rawCount < 150) {
+        p.rawTimings[p.rawCount++] = x;
+      }
+    }
   }
 
   bool ok = storage.updatePreset(p);
@@ -317,18 +332,8 @@ void WebHandler::handleTriggerPreset() {
 
   if (p->type == 1) { // IR transmission
     uint8_t reps = p->repeats > 0 ? p->repeats : 3;
-    if (p->isRaw && strlen(p->rawData) > 0) {
-      uint16_t rawBuf[128];
-      uint16_t count = 0;
-      char copy[256];
-      strncpy(copy, p->rawData, sizeof(copy) - 1);
-      copy[sizeof(copy) - 1] = '\0';
-      char* token = strtok(copy, ",");
-      while (token != NULL && count < 128) {
-        rawBuf[count++] = atoi(token);
-        token = strtok(NULL, ",");
-      }
-      ok = irManager.transmitRaw(rawBuf, count, reps);
+    if (p->isRaw && p->rawCount > 0) {
+      ok = irManager.transmitRaw(p->rawTimings, p->rawCount, reps);
     } else if (p->protocol == 2) {
       ok = irManager.transmitSony(codeToTransmit, p->bitLength > 0 ? p->bitLength : 12, reps > 2 ? reps : 3);
     } else if (p->protocol == 3) {
@@ -370,43 +375,54 @@ void WebHandler::handleDeletePreset() {
 }
 
 void WebHandler::handleStreamStart() {
-  uint32_t code = 0;
-  uint8_t bits = DEFAULT_BIT_LENGTH;
-  uint8_t proto = DEFAULT_PROTOCOL;
-  uint16_t pulse = DEFAULT_PULSE_LENGTH;
-  float freq = rfManager.getFrequency();
-
   if (server.hasArg("id")) {
     uint32_t id = server.arg("id").toInt();
     GatePreset* p = storage.getPresetById(id);
     if (p) {
-      code = p->code;
-      bits = p->bitLength;
-      proto = p->protocol;
-      pulse = p->pulseLength;
-      freq = p->frequency;
+      bool ok = false;
+      if (p->type == 1) { // IR
+        if (p->isRaw && p->rawCount > 0) {
+          ok = irManager.startStreamRaw(p->rawTimings, p->rawCount);
+        } else {
+          ok = irManager.startStreamDecoded(p->code, p->bitLength, p->protocol);
+        }
+      } else { // RF
+        ok = rfManager.startStream(p->code, p->bitLength, p->protocol, p->pulseLength, p->frequency);
+      }
+      sendJsonResponse(ok, ok ? "Streaming started" : "Failed to start streaming");
+      return;
     }
   } else if (server.hasArg("plain")) {
     JsonDocument doc;
     deserializeJson(doc, server.arg("plain"));
-    code = doc["code"] | 0;
-    bits = doc["bits"] | DEFAULT_BIT_LENGTH;
-    proto = doc["proto"] | DEFAULT_PROTOCOL;
-    pulse = doc["pulse"] | DEFAULT_PULSE_LENGTH;
-    freq = doc["freq"] | rfManager.getFrequency();
-  }
+    uint32_t code = doc["code"] | 0;
+    uint8_t bits = doc["bits"] | DEFAULT_BIT_LENGTH;
+    uint8_t proto = doc["proto"] | DEFAULT_PROTOCOL;
+    uint16_t pulse = doc["pulse"] | DEFAULT_PULSE_LENGTH;
+    float freq = doc["freq"] | rfManager.getFrequency();
+    uint8_t type = doc["type"] | 0; // 0=RF, 1=IR
 
-  if (code == 0) {
-    sendJsonResponse(false, "Invalid code for streaming");
+    if (code == 0) {
+      sendJsonResponse(false, "Invalid code for streaming");
+      return;
+    }
+
+    bool ok = false;
+    if (type == 1) {
+      ok = irManager.startStreamDecoded(code, bits, proto);
+    } else {
+      ok = rfManager.startStream(code, bits, proto, pulse, freq);
+    }
+    sendJsonResponse(ok, ok ? "Streaming started" : "Failed to start streaming");
     return;
   }
 
-  bool ok = rfManager.startStream(code, bits, proto, pulse, freq);
-  sendJsonResponse(ok, ok ? "Streaming started" : "Failed to start streaming");
+  sendJsonResponse(false, "Invalid request");
 }
 
 void WebHandler::handleStreamStop() {
   rfManager.stopStream();
+  irManager.stopStream();
   sendJsonResponse(true, "Streaming stopped");
 }
 

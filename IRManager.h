@@ -28,6 +28,10 @@ public:
   bool transmitPanasonic(uint32_t code, uint8_t bits = 32, uint8_t repeats = 2);
   bool transmitRaw(const uint16_t* timings, uint16_t count, uint8_t repeats = 2);
 
+  bool startStreamRaw(const uint16_t* timings, uint16_t count);
+  bool startStreamDecoded(uint32_t code, uint8_t bits, uint8_t proto);
+  void stopStream();
+
   bool isSignalAvailable() const;
   RecordedIR getLatestSignal() const;
   void clearSignal();
@@ -37,6 +41,15 @@ private:
   bool signalAvailable;
   bool listeningActive;
   uint32_t lastRxTime;
+
+  bool streaming;
+  uint32_t streamLastTx;
+  bool streamIsRaw;
+  uint16_t streamRawTimings[150];
+  uint16_t streamRawCount;
+  uint32_t streamCode;
+  uint8_t streamBits;
+  uint8_t streamProto; // 1=NEC, 2=Sony, 3=Panasonic
 
   void send38kHzBurst(uint32_t durationUs);
   void sendSpace(uint32_t durationUs);
