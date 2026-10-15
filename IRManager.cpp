@@ -26,7 +26,7 @@ void IRAM_ATTR irRxISR() {
   irNewBurst = true;
 }
 
-IRManager::IRManager() : signalAvailable(false), listeningActive(false), lastRxTime(0) {
+IRManager::IRManager() : signalAvailable(false), listeningActive(false), lastRxTime(0), streaming(false), streamLastTx(0) {
   memset(&latestIR, 0, sizeof(latestIR));
 }
 
@@ -178,10 +178,46 @@ bool IRManager::transmitRaw(const uint16_t* timings, uint16_t count, uint8_t rep
   return true;
 }
 
+bool IRManager::startStreamRaw(const uint16_t* timings, uint16_t count) {
+  if (!timings || count == 0 || count > 150) return false;
+  streamIsRaw = true;
+  streamRawCount = count;
+  for (uint16_t i = 0; i < count; i++) streamRawTimings[i] = timings[i];
+  streaming = true;
+  streamLastTx = 0;
+  return true;
+}
+
+bool IRManager::startStreamDecoded(uint32_t code, uint8_t bits, uint8_t proto) {
+  streamIsRaw = false;
+  streamCode = code;
+  streamBits = bits;
+  streamProto = proto;
+  streaming = true;
+  streamLastTx = 0;
+  return true;
+}
+
+void IRManager::stopStream() {
+  streaming = false;
+}
+
 void IRManager::update() {
+  uint32_t now = millis();
+
+  if (streaming && (now - streamLastTx > 100)) { // 100ms repeat interval for continuous hold
+    if (streamIsRaw) {
+      transmitRaw(streamRawTimings, streamRawCount, 1);
+    } else {
+      if (streamProto == 2) transmitSony(streamCode, streamBits, 1);
+      else if (streamProto == 3) transmitPanasonic(streamCode, streamBits, 1);
+      else transmitNEC(streamCode, streamBits, 1);
+    }
+    streamLastTx = millis();
+  }
+
   if (!listeningActive) return;
 
-  uint32_t now = millis();
   // Frame finished if idle for > 65ms after last edge (covers entire frame + inter-frame gap + repeats)
   if (irNewBurst && (now - irLastPulseMs > 65)) {
     irNewBurst = false;

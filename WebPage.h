@@ -1561,7 +1561,6 @@ function renderQuickPresets(presets) {
               ${hexCode} | ${isIR ? 'IR' : p.freq + ' MHz'} | ${p.reps}x
             </span>
           </button>
-          ${!isIR ? `
           <button class="btn btn-stream"
                   data-id="${p.id}"
                   onmousedown="startStreamPreset(${p.id}, this)"
@@ -1570,7 +1569,7 @@ function renderQuickPresets(presets) {
                   ontouchstart="startStreamPreset(${p.id}, this, event)"
                   ontouchend="stopStreamPreset(this, event)">
             🔴 HOLD TO STREAM (Continuous Burst)
-          </button>` : ''}
+          </button>
           <div class="preset-card-footer">
             <span>${isIR ? 'IR Infrared' : p.freq + ' MHz'}</span>
             <div style="display:flex; gap:6px;">
@@ -1941,8 +1940,7 @@ async function fireRawIR(rawArr, reps=2) {
 
 async function quickSaveIRPreset(name, code, cat="Other", isToggle=false, codeOff=0, proto="NEC", bits=32, rawArr=null) {
   haptic();
-  const rawStr = (rawArr && rawArr.length > 0) ? rawArr.slice(0, 100).join(',') : '';
-  const isRaw = (rawStr.length > 0);
+  const isRaw = (rawArr && rawArr.length > 0);
   savePresetObject({
     name: name,
     cat: cat,
@@ -1956,7 +1954,7 @@ async function quickSaveIRPreset(name, code, cat="Other", isToggle=false, codeOf
     toggle: isToggle,
     code_off: codeOff,
     raw: isRaw,
-    raw_data: rawStr
+    raw_data: isRaw ? rawArr.slice(0, 150) : null
   });
 }
 

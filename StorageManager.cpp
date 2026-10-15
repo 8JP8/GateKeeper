@@ -89,7 +89,28 @@ void StorageManager::loadPresets() {
     p.codeOff = obj["code_off"] | 0;
     p.state = obj["state"] | false;
     p.isRaw = obj["raw"] | false;
-    strncpy(p.rawData, obj["raw_data"] | "", sizeof(p.rawData) - 1);
+    p.rawCount = 0;
+
+    if (obj.containsKey("raw_data")) {
+      if (obj["raw_data"].is<JsonArray>()) {
+        JsonArray arr = obj["raw_data"];
+        for (uint16_t x : arr) {
+          if (p.rawCount < 150) {
+            p.rawTimings[p.rawCount++] = x;
+          }
+        }
+      } else if (obj["raw_data"].is<const char*>()) {
+        // Fallback for legacy comma-separated string
+        char tempBuf[1024]; // Large enough for ~150 numbers
+        strncpy(tempBuf, obj["raw_data"] | "", sizeof(tempBuf) - 1);
+        tempBuf[sizeof(tempBuf) - 1] = '\0';
+        char* token = strtok(tempBuf, ",");
+        while (token != NULL && p.rawCount < 150) {
+          p.rawTimings[p.rawCount++] = atoi(token);
+          token = strtok(NULL, ",");
+        }
+      }
+    }
     presetCount++;
   }
 }
@@ -114,8 +135,11 @@ void StorageManager::savePresets() {
     obj["code_off"] = presets[i].codeOff;
     obj["state"] = presets[i].state;
     obj["raw"] = presets[i].isRaw;
-    if (presets[i].isRaw) {
-      obj["raw_data"] = presets[i].rawData;
+    if (presets[i].isRaw && presets[i].rawCount > 0) {
+      JsonArray rawArr = obj["raw_data"].to<JsonArray>();
+      for (uint8_t j = 0; j < presets[i].rawCount; j++) {
+        rawArr.add(presets[i].rawTimings[j]);
+      }
     }
   }
 
