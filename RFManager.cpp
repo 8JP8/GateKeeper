@@ -7,6 +7,9 @@ RFManager::RFManager()
     currentPower(DEFAULT_RF_POWER),
     cc1101Ok(false),
     listeningActive(true),
+    lastHealthCheckTime(0),
+    healthyCount(0),
+    unhealthyCount(5),
     signalCount(0),
     lastReceiveTime(0),
     lastReceivedCode(0),
@@ -34,12 +37,16 @@ bool RFManager::begin(float freq, int8_t power) {
   byte part = ELECHOUSE_cc1101.SpiReadStatus(CC1101_PARTNUM);
   Serial.printf("[RF] Read CC1101 Partnum: 0x%02X, Version: 0x%02X\n", part, version);
 
-  if (ELECHOUSE_cc1101.getCC1101()) {
+  if (part == 0x00 && (version == 0x14 || version == 0x04)) {
     Serial.println("[RF] CC1101 SPI Communication Verified (Chip detected)");
     cc1101Ok = true;
+    healthyCount = 5;
+    unhealthyCount = 0;
   } else {
     Serial.println("[RF] WARNING: CC1101 not detected on SPI! Check wiring and 3.3V power!");
     cc1101Ok = false;
+    healthyCount = 0;
+    unhealthyCount = 5;
   }
 
   ELECHOUSE_cc1101.setMHZ(currentFreq);
@@ -408,7 +415,26 @@ int16_t RFManager::getLiveRSSI() {
 }
 
 bool RFManager::isConnected() {
-  return ELECHOUSE_cc1101.getCC1101();
+  uint32_t now = millis();
+  if (now - lastHealthCheckTime > 2000) {
+    lastHealthCheckTime = now;
+    byte part = ELECHOUSE_cc1101.SpiReadStatus(CC1101_PARTNUM);
+    byte version = ELECHOUSE_cc1101.SpiReadStatus(CC1101_VERSION);
+    if (part == 0x00 && (version == 0x14 || version == 0x04)) {
+      if (healthyCount < 5) healthyCount++;
+      unhealthyCount = 0;
+      if (healthyCount >= 3) {
+        cc1101Ok = true;
+      }
+    } else {
+      if (unhealthyCount < 5) unhealthyCount++;
+      healthyCount = 0;
+      if (unhealthyCount >= 3) {
+        cc1101Ok = false;
+      }
+    }
+  }
+  return cc1101Ok;
 }
 
 int RFManager::getSignalCount() const {

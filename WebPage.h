@@ -499,12 +499,12 @@ body {
   </div>
   <div class="header-actions">
     <button id="btn-lang" class="btn btn-outline btn-sm" onclick="toggleLanguage()">PT</button>
-    <button class="btn btn-outline btn-sm" onclick="openQrModal()">📱 QR</button>
+    <button class="btn btn-outline btn-sm" onclick="openQrModal()">QR</button>
     <div class="status-pill">
       <div class="badge" id="b-cc1101"><span>●</span> CC1101...</div>
-      <div class="badge" id="b-freq">433.92 MHz</div>
       <div class="badge" id="b-stream" style="display:none;">LIVE STREAM</div>
     </div>
+    <button id="btn-top-settings" class="btn btn-outline btn-sm" onclick="switchTab('tab-settings', this)" title="Settings">⚙️</button>
   </div>
 </header>
 
@@ -532,11 +532,7 @@ body {
   </button>
   <button class="tab-btn" onclick="switchTab('tab-wiring', this)">
     <span class="icon">🔌</span>
-    <span data-i18n="tab_wiring">Wiring & About</span>
-  </button>
-  <button class="tab-btn" onclick="switchTab('tab-settings', this)">
-    <span class="icon">⚙</span>
-    <span data-i18n="tab_settings">Settings</span>
+    <span data-i18n="tab_setup">Setup</span>
   </button>
 </nav>
 
@@ -544,32 +540,21 @@ body {
 
   <!-- TAB: DASHBOARD (Unified Smart Home Hub) -->
   <div id="tab-dash" class="tab-content active">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title"><span>🏠</span> <span data-i18n="dash_title">Smart Home Dashboard</span></span>
-        <div style="display:flex; gap:6px;">
-          <button class="btn btn-primary btn-sm" onclick="openAddDeviceModal()">➕ <span data-i18n="add_device">Add Device</span></button>
-          <button class="btn btn-outline btn-sm" onclick="haptic(); fetchPresets()">↻</button>
-        </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.2rem;">🏠</span>
+        <h2 style="font-size:1.1rem; font-weight:800; color:#fff;" data-i18n="dash_title">Dashboard</h2>
       </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-primary btn-sm" onclick="openAddContainerModal()">➕ <span data-i18n="add_container">Add Container</span></button>
+        <button class="btn btn-outline btn-sm" onclick="openAddDeviceModal()">➕ <span data-i18n="add_device">Add Device</span></button>
+        <button class="btn btn-outline btn-sm" onclick="haptic(); fetchPresets()">↻</button>
+      </div>
+    </div>
 
-      <!-- Category Filter Chips -->
-      <div class="cat-chips">
-        <button class="cat-chip active" onclick="filterCategory('All', this)" data-i18n="cat_all">All</button>
-        <button class="cat-chip" onclick="filterCategory('Gate', this)">🚪 <span data-i18n="cat_gate">Gate</span></button>
-        <button class="cat-chip" onclick="filterCategory('Garage', this)">🚘 <span data-i18n="cat_garage">Garage</span></button>
-        <button class="cat-chip" onclick="filterCategory('Lighting', this)">💡 <span data-i18n="cat_lighting">Lighting</span></button>
-        <button class="cat-chip" onclick="filterCategory('Blinds', this)">🪟 <span data-i18n="cat_blinds">Blinds</span></button>
-        <button class="cat-chip" onclick="filterCategory('AC', this)">❄️ <span data-i18n="cat_ac">AC</span></button>
-        <button class="cat-chip" onclick="filterCategory('TV', this)">📺 <span data-i18n="cat_tv">TV</span></button>
-        <button class="cat-chip" onclick="filterCategory('Audio', this)">🔊 <span data-i18n="cat_audio">Audio</span></button>
-        <button class="cat-chip" onclick="filterCategory('Fan', this)">🌀 <span data-i18n="cat_fan">Fan</span></button>
-        <button class="cat-chip" onclick="filterCategory('Other', this)">⚡ <span data-i18n="cat_other">Other</span></button>
-      </div>
-
-      <div id="quick-presets-container" class="grid-presets">
-        <p style="color:var(--muted); text-align:center; padding: 20px;" data-i18n="no_presets">Loading devices...</p>
-      </div>
+    <!-- Dynamic Containers Rendered Here -->
+    <div id="dash-containers-root">
+      <p style="color:var(--muted); text-align:center; padding: 20px;" data-i18n="no_presets">Loading devices...</p>
     </div>
   </div>
 
@@ -652,6 +637,17 @@ body {
           <p id="scanner-status" style="font-size:0.72rem; color:var(--muted); margin-top:6px; display:none;"></p>
         </div>
 
+        <!-- TV / PRESET CONTROLS TOOLBAR -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px; background:#0c1220; padding:10px; border-radius:8px; border:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:0.8rem; font-weight:700; color:#38bdf8;">📺 TV Presets:</span>
+            <button class="btn btn-primary btn-sm" onclick="openCreateTvPresetModal()" title="Create New TV Preset">➕ New Preset</button>
+            <button class="btn btn-outline btn-sm" onclick="openReplaceTvPresetModal()" title="Replace or Clone Preset">🔄 Replace / Clone</button>
+            <button id="btn-delete-tv-preset" class="btn btn-danger btn-sm" onclick="deleteActiveTvPreset()" title="Delete Custom Preset" style="display:none;">🗑️ Delete</button>
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="openAddButtonModal()">➕ Add Button</button>
+        </div>
+
         <div id="appliance-keypad-container" class="remote-grid">
           <!-- Populated via JS -->
         </div>
@@ -725,6 +721,52 @@ body {
         <button type="button" id="btn-manual-stream" class="btn btn-stream" style="margin-top:10px;">
           🔴 HOLD TO STREAM (Continuous TX)
         </button>
+      </form>
+    </div>
+
+    <!-- Manual IR Remote & Transmitter -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <span class="card-title"><span>🔦</span> <span data-i18n="man_ir_title">Manual IR Remote & Transmitter</span></span>
+      </div>
+      <form id="manual-ir-form" onsubmit="transmitManualIR(event)">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" data-i18n="man_ir_proto">Protocol</label>
+            <select class="form-control" id="man-ir-proto" onchange="document.getElementById('grp-man-ir-raw').style.display = (this.value === 'Raw' ? 'block' : 'none')">
+              <option value="NEC">NEC (Standard 32-bit)</option>
+              <option value="Sony">Sony (12 / 15 / 20-bit)</option>
+              <option value="Panasonic">Panasonic / Kaseikyo</option>
+              <option value="Raw">Raw Pulses</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="man_ir_code">IR Code (Hex or Decimal)</label>
+            <input class="form-control" id="man-ir-code" placeholder="0x20DF10EF or 551489775" required>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" data-i18n="man_ir_bits">Bit Length</label>
+            <input class="form-control" type="number" id="man-ir-bits" value="32" min="1" max="64" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="man_ir_reps">Repeat Bursts</label>
+            <input class="form-control" type="number" id="man-ir-repeats" value="3" min="1" max="20" required>
+          </div>
+        </div>
+        <div class="form-group" id="grp-man-ir-raw" style="display:none;">
+          <label class="form-label">Raw Timings (comma-separated µs)</label>
+          <textarea class="form-control" id="man-ir-raw" rows="2" placeholder="9000, 4500, 560, 560..."></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px;">
+          <button type="submit" class="btn btn-primary">🚀 <span data-i18n="single_ir_burst">Transmit IR</span></button>
+          <button type="button" class="btn btn-warning" id="btn-man-ir-record" onclick="recordManualIR()">🔴 Record IR</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+          <button type="button" class="btn btn-accent" onclick="saveManualIRAsPreset()">💾 Save to Dashboard</button>
+          <button type="button" class="btn btn-outline" onclick="switchTab('tab-ir')">🔦 Open IR Remote</button>
+        </div>
       </form>
     </div>
   </div>
@@ -824,7 +866,7 @@ body {
   <div id="tab-wiring" class="tab-content">
     <div class="card">
       <div class="card-header">
-        <span class="card-title"><span>🔌</span> <span data-i18n="tab_wiring">Hardware Pinout & Wiring Guide</span></span>
+        <span class="card-title"><span>🔌</span> <span data-i18n="setup_title">Setup & Hardware Pinout Guide</span></span>
       </div>
       <p style="color:var(--muted); font-size:0.85rem; line-height:1.5; margin-bottom:14px;" data-i18n="wiring_intro">
         All hardware components have dedicated, non-overlapping GPIOs on the ESP32-C3 Super Mini. They share common GND and 3.3V power rails, allowing CC1101 RF, IR Transmitter, and IR Receiver to remain wired simultaneously!
@@ -899,7 +941,7 @@ body {
     <div class="card">
       <div class="card-header">
         <span class="card-title"><span>📶</span> <span data-i18n="wifi_title">Wi-Fi Network</span></span>
-        <button class="btn btn-outline btn-sm" onclick="openQrModal()">📱 QR Connect</button>
+        <button class="btn btn-outline btn-sm" onclick="openQrModal()">QR</button>
       </div>
       <div style="background:#0c1220; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.8rem; line-height:1.5;">
         <div><strong>Hotspot IP:</strong> <span id="txt-ap-ip" style="color:var(--primary)">192.168.4.1</span></div>
@@ -1172,6 +1214,162 @@ body {
   </div>
 </div>
 
+<!-- DASHBOARD CONTAINER MODAL -->
+<div id="container-modal" class="modal">
+  <div class="modal-content">
+    <div class="card-header">
+      <span class="card-title"><span id="container-modal-icon">🏠</span> <span id="container-modal-title">Add Dashboard Container</span></span>
+      <button class="btn btn-outline btn-sm" onclick="closeContainerModal()">✕</button>
+    </div>
+    <form id="container-form" onsubmit="saveContainerSubmit(event)">
+      <input type="hidden" id="cont-id">
+      <div class="form-group">
+        <label class="form-label">Container Title</label>
+        <input class="form-control" id="cont-name" placeholder="e.g. Living Room, Garage & Gate..." required>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Icon</label>
+          <select class="form-control" id="cont-icon">
+            <option value="🏠">🏠 Home</option>
+            <option value="🚪">🚪 Gate</option>
+            <option value="🚘">🚘 Garage</option>
+            <option value="📺">📺 TV & Media</option>
+            <option value="💡">💡 Lighting</option>
+            <option value="❄️">❄️ Climate / AC</option>
+            <option value="🔊">🔊 Audio</option>
+            <option value="🌀">🌀 Fan</option>
+            <option value="🪟">🪟 Blinds</option>
+            <option value="⚡">⚡ General</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Filter</label>
+          <select class="form-control" id="cont-filter">
+            <option value="All">All Devices</option>
+            <option value="Gate">Gate</option>
+            <option value="Garage">Garage</option>
+            <option value="Lighting">Lighting</option>
+            <option value="Blinds">Blinds</option>
+            <option value="AC">AC</option>
+            <option value="TV">TV</option>
+            <option value="Audio">Audio</option>
+            <option value="Fan">Fan</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+        <button type="submit" class="btn btn-success">Save Container</button>
+        <button type="button" class="btn btn-outline" onclick="closeContainerModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TV PRESET MODAL (Create / Replace) -->
+<div id="tv-preset-modal" class="modal">
+  <div class="modal-content">
+    <div class="card-header">
+      <span class="card-title"><span>📺</span> <span id="tv-preset-modal-title">Create TV Preset</span></span>
+      <button class="btn btn-outline btn-sm" onclick="closeTvPresetModal()">✕</button>
+    </div>
+    <form id="tv-preset-form" onsubmit="saveTvPresetSubmit(event)">
+      <input type="hidden" id="tv-preset-mode" value="create">
+      <div class="form-group">
+        <label class="form-label">Preset Name</label>
+        <input class="form-control" id="tv-preset-name" placeholder="e.g. Living Room TV, Samsung Bedroom..." required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Template / Base Layout</label>
+        <select class="form-control" id="tv-preset-template">
+          <option value="empty">Empty Remote (Start from scratch)</option>
+          <option value="current">Clone buttons from Current TV</option>
+          <option value="samsung">Clone Samsung Smart TV buttons</option>
+          <option value="lg">Clone LG WebOS buttons</option>
+          <option value="sony">Clone Sony Bravia buttons</option>
+          <option value="kunft">Clone Kunft / Vestel buttons</option>
+          <option value="tcl">Clone TCL TV buttons</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Default Protocol</label>
+          <select class="form-control" id="tv-preset-proto">
+            <option value="NEC">NEC (Standard 32-bit)</option>
+            <option value="Sony">Sony (12/15-bit)</option>
+            <option value="Panasonic">Panasonic / Kaseikyo</option>
+            <option value="Raw">Raw Pulses</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Bit Length</label>
+          <input class="form-control" type="number" id="tv-preset-bits" value="32" min="1" max="64" required>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+        <button type="submit" class="btn btn-success" id="btn-tv-preset-save">Save Preset</button>
+        <button type="button" class="btn btn-outline" onclick="closeTvPresetModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TV BUTTON EDIT / ADD MODAL -->
+<div id="tv-button-modal" class="modal">
+  <div class="modal-content">
+    <div class="card-header">
+      <span class="card-title"><span>🔘</span> <span id="tv-btn-modal-title">Edit Remote Button</span></span>
+      <button class="btn btn-outline btn-sm" onclick="closeTvButtonModal()">✕</button>
+    </div>
+    <form id="tv-button-form" onsubmit="saveTvButtonSubmit(event)">
+      <input type="hidden" id="tv-btn-idx" value="-1">
+      <div class="form-group">
+        <label class="form-label">Button Label / Function</label>
+        <input class="form-control" id="tv-btn-name" placeholder="e.g. Power, Vol +, HDMI 1, Mute..." required>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Protocol</label>
+          <select class="form-control" id="tv-btn-proto" onchange="onTvBtnProtoChange(this.value)">
+            <option value="NEC">NEC</option>
+            <option value="Sony">Sony</option>
+            <option value="Panasonic">Panasonic</option>
+            <option value="Raw">Raw</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bit Length</label>
+          <input class="form-control" type="number" id="tv-btn-bits" value="32" min="1" max="64" required>
+        </div>
+      </div>
+      <div class="form-group" id="grp-tv-btn-code">
+        <label class="form-label">Code (Hex e.g. 0x20DF10EF or Decimal)</label>
+        <input class="form-control" id="tv-btn-code" placeholder="0x12345678 or 123456" required>
+      </div>
+      <div class="form-group" id="grp-tv-btn-raw" style="display:none;">
+        <label class="form-label">Raw Timings (comma-separated µs)</label>
+        <textarea class="form-control" id="tv-btn-raw" rows="2" placeholder="9000, 4500, 560, 560..."></textarea>
+      </div>
+      <!-- RECORD BUTTON FROM PHYSICAL REMOTE -->
+      <div style="background:#0c1220; border:1px solid var(--border); border-radius:8px; padding:10px; margin: 10px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <span style="font-size:0.82rem; font-weight:700; color:var(--text);">Hardware IR Capture</span>
+            <p style="font-size:0.73rem; color:var(--muted); margin:2px 0 0 0;">Record directly by aiming physical remote at GPIO0.</p>
+          </div>
+          <button type="button" class="btn btn-warning btn-sm" id="btn-tv-btn-record" onclick="toggleButtonRecording()">🔴 Record from Remote</button>
+        </div>
+        <p id="tv-btn-record-status" style="font-size:0.75rem; margin-top:6px; margin-bottom:0;"></p>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+        <button type="button" class="btn btn-primary" onclick="testModalButtonIR()">▶ Test Signal</button>
+        <button type="submit" class="btn btn-success">Save Button</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Mobile Bottom Navigation Dock -->
 <nav class="nav-bar-mobile">
   <button class="tab-btn active" onclick="switchTab('tab-dash', this)">
@@ -1196,11 +1394,7 @@ body {
   </button>
   <button class="tab-btn" onclick="switchTab('tab-wiring', this)">
     <span class="icon">🔌</span>
-    <span data-i18n="tab_wiring">Wiring</span>
-  </button>
-  <button class="tab-btn" onclick="switchTab('tab-settings', this)">
-    <span class="icon">⚙</span>
-    <span data-i18n="tab_settings">Settings</span>
+    <span data-i18n="tab_setup">Setup</span>
   </button>
 </nav>
 
@@ -1221,7 +1415,19 @@ let isIRListeningActive = false;
 let isRFListeningActive = false;
 
 // Major Brands IR Appliance Database (RemoteCentral Codes)
-const IR_APPLIANCES = {"tv":{"kunft":{"name":"Kunft TV (Worten)","sets":[{"name":"Set 1: Vestel RC1910 / Standard","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796],["Exit",12539051],["Info",12539306],["Up",12539561],["Down",12539816],["Left",12540071],["Right",12540326]]},{"name":"Set 2: Vestel Variant (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Ch +",33437895],["Ch -",33470535],["Source",33429735],["OK",33464925],["Menu",33462375],["Return",33433815]]},{"name":"Set 3: Chinese Smart OEM (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Ch +",16720605],["Ch -",16712445],["Source",16748655],["Home",16761405],["OK",16712445],["Back",16732845]]},{"name":"Set 4: MStar Android Kunft (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Ch +",83615775],["Ch -",83562735],["Input",83595375],["OK",83568855],["Home",83579055]]}]},"mitsai":{"name":"Mitsai TV (Worten)","sets":[{"name":"Set 1: Vestel Standard","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796]]},{"name":"Set 2: Konka / Mitsai Variant","proto":"NEC","bits":32,"keys":[["Power",150405885,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["Ch +",150423735],["Ch -",150407415],["AV",150438015],["OK",150410985]]},{"name":"Set 3: Mitsai Universal Chinese","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Vol +",16736415],["Vol -",16752735],["Mute",16769055],["Ch +",16720095],["Ch -",16711935],["Source",16728255],["OK",16748655]]}]},"silver":{"name":"Silver TV (Portugal)","sets":[{"name":"Set 1: Silver Smart TV (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Menu",16769055],["OK",16748655],["Back",16752735]]},{"name":"Set 2: Silver MStar (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Ch +",83615775],["Ch -",83562735],["Input",83595375],["OK",83568855]]},{"name":"Set 3: Silver Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"tdsystems":{"name":"TD Systems (Iberia)","sets":[{"name":"Set 1: K-Series (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Menu",16769055],["OK",16748655]]},{"name":"Set 2: Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 3: Android Smart (0x00FFA25D)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Home",16761405],["OK",16712445]]}]},"electronia":{"name":"Electronia (R\u00e1dio Popular)","sets":[{"name":"Set 1: Vestel RC1910","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Chinese Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Source",16748655],["OK",16712445]]}]},"selecline":{"name":"Selecline (Auchan)","sets":[{"name":"Set 1: Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Skyworth Profile","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Source",33429735],["OK",33464925]]}]},"cecotec":{"name":"Cecotec TV","sets":[{"name":"Set 1: Android Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Ch +",16720605],["Ch -",16712445],["Source",16748655],["Home",16761405],["OK",16712445]]},{"name":"Set 2: MStar Variant (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Input",83595375],["OK",83568855]]}]},"denver":{"name":"Denver / Engel / Axil","sets":[{"name":"Set 1: Denver LED (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Source",16736415],["OK",16748655]]},{"name":"Set 2: Engel Axil DVB (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["OK",33464925]]}]},"vestel":{"name":"Vestel Universal (OEM Euro)","sets":[{"name":"Set 1: RC1910 / RC4848 (Kunft/Mitsai/Sharp/Toshiba)","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796],["Exit",12539051],["Info",12539306],["Guide",12540071]]},{"name":"Set 2: RC2040 / 3040 Variant","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Ch +",33437895],["Ch -",33470535],["Source",33429735],["OK",33464925]]},{"name":"Set 3: RC5 Chassis","proto":"NEC","bits":32,"keys":[["Power",150405885,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["OK",150410985]]}]},"panasonic":{"name":"Panasonic Viera / TV","sets":[{"name":"Set 1: Viera Kaseikyo / Modern (Panasonic)","proto":"Panasonic","bits":32,"keys":[["Power",1074004224,1],["Vol +",1074004228],["Vol -",1074004356],["Mute",1074004300],["Ch +",1074004268],["Ch -",1074004396],["Input",1074004384],["Menu",1074004298],["OK",1074004370],["Return",1074004434]]},{"name":"Set 2: Viera NEC Standard (RemoteCentral)","proto":"NEC","bits":32,"keys":[["Power",16825533,1],["Vol +",16778245],["Vol -",16811141],["Mute",16796749],["Ch +",16788525],["Ch -",16821421],["Input",16818337],["OK",16814739],["Return",16831187]]},{"name":"Set 3: Panasonic Android TV / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Home",12538796],["OK",12538796]]},{"name":"Set 4: Discrete Power & Direct HDMI","proto":"Panasonic","bits":32,"keys":[["Power ON",1074004284,1],["Power OFF",1074004476,1],["HDMI 1",1074004448],["HDMI 2",1074004320],["HDMI 3",1074004322],["Component",1074004256]]}]},"samsung":{"name":"Samsung TV","sets":[{"name":"Set 1: Modern Smart TV","proto":"NEC","bits":32,"keys":[["Power",3772793023,1],["Vol +",3772833823],["Vol -",3772829743],["Mute",3772837903],["Ch +",3772795063],["Ch -",3772778743],["Source",3772809343],["Menu",3772799143],["Return",3772783333],["Tools",3772831273],["Info",3772839943],["OK",3772782313],["Up",3772778233],["Down",3772810873],["Left",3772819033],["Right",3772794553],["HDMI",3772815208]]},{"name":"Set 2: Discrete Power & Direct HDMI","proto":"NEC","bits":32,"keys":[["Power ON",3772815718,1],["Power OFF",3772783078,1],["HDMI 1",3772829998],["HDMI 2",3772834078],["HDMI 3",3772818268],["HDMI 4",3772800163],["AV",3772817758],["Component",3772788433],["SmartHub",3772816993]]},{"name":"Set 3: Legacy LCD / Plasma","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Source",551538735],["OK",551494365]]},{"name":"Set 4: Older CRT / Variant","proto":"NEC","bits":32,"keys":[["Power",150421695,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["Source",150438015]]}]},"lg":{"name":"LG TV","sets":[{"name":"Set 1: WebOS & Standard LCD","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Input",551538735],["Home",551501505],["Back",551490795],["Settings",551535165],["OK",551494365],["Up",551486205],["Down",551518845],["Left",551542815],["Right",551510175]]},{"name":"Set 2: Discrete Power & Direct Inputs","proto":"NEC","bits":32,"keys":[["Power ON",551494620,1],["Power OFF",551515020,1],["HDMI 1",551515020],["HDMI 2",551498700],["HDMI 3",551524200],["HDMI 4",551509410],["AV",551508645],["Component",551539755]]},{"name":"Set 3: Legacy Goldstar / LG CRT/LCD","proto":"NEC","bits":32,"keys":[["Power",2155811055,1],["Vol +",2155823295],["Vol -",2155855935],["Mute",2155843695],["Ch +",2155806975],["Ch -",2155839615],["Input",2155860015],["OK",2155815645]]},{"name":"Set 4: LG Service Menu & Diagnostics","proto":"NEC","bits":32,"keys":[["In-Start",551542560],["Ez-Adjust",551550720],["Power-Only",551550465],["Eye-Q",551531595]]}]},"sony":{"name":"Sony Bravia","sets":[{"name":"Set 1: Bravia 12-bit Standard","proto":"Sony","bits":12,"keys":[["Power",2704,1],["Vol +",1168],["Vol -",3216],["Mute",656],["Ch +",144],["Ch -",2192],["Input",2640],["Home",112],["Return",3184],["Wide",3304],["OK",2672],["Up",752],["Down",2800],["Left",720],["Right",3280]]},{"name":"Set 2: Discrete Power & Direct Video (15-bit)","proto":"Sony","bits":15,"keys":[["Power ON",1872,1],["Power OFF",3920,1],["HDMI 1",2608],["HDMI 2",2352],["HDMI 3",1328],["HDMI 4",816],["Video 1",48],["Video 2",2096]]},{"name":"Set 3: Bravia Android TV (15-bit)","proto":"Sony","bits":15,"keys":[["Power",1168,1],["Vol +",576],["Vol -",1600],["Mute",320],["Input",1344],["Home",112],["Action Menu",624],["OK",112]]}]},"philips":{"name":"Philips TV","sets":[{"name":"Set 1: Modern Android TV / TP Vision (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Home",16716015],["OK",16748655],["Back",16752735]]},{"name":"Set 2: Philips Smart TV Variant (0x02FD)","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Ch +",50149575],["Ch -",50182215],["Source",50141415],["OK",50176605]]},{"name":"Set 3: Philips RC6 Mode 0","proto":"NEC","bits":32,"keys":[["Power",4108,1],["Vol +",4112],["Vol -",4113],["Mute",4109],["Ch +",4128],["Ch -",4129],["Source",4152]]},{"name":"Set 4: Philips RC5 Legacy","proto":"NEC","bits":32,"keys":[["Power",12,1],["Vol +",16],["Vol -",17],["Mute",13],["Ch +",32],["Ch -",33]]}]},"tcl":{"name":"TCL TV","sets":[{"name":"Set 1: Modern Android & Google TV","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["Ch +",1086277815],["Ch -",1086261495],["Source",1086292095],["Home",1086290055],["OK",1086265065],["Up",1086260985],["Down",1086293625],["Left",1086301785],["Right",1086277305],["Back",1086266085]]},{"name":"Set 2: TCL Roku TV","proto":"NEC","bits":32,"keys":[["Power",1474553879,1],["Vol +",1474511039],["Vol -",1474543679],["Mute",1474502879],["Home",1474551839],["OK",1474533479],["Back",1474520729],["Up",1474533989],["Down",1474517669]]},{"name":"Set 3: TCL Legacy / Thomson","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["OK",12538796]]}]},"hisense":{"name":"Hisense TV","sets":[{"name":"Set 1: VIDAA Smart TV","proto":"NEC","bits":32,"keys":[["Power",4244783295,1],["Vol +",4244824095],["Vol -",4244820015],["Mute",4244828175],["Ch +",4244785335],["Ch -",4244769015],["Source",4244799615],["Home",4244782785],["OK",4244772585],["Back",4244773605],["Menu",4244789415]]},{"name":"Set 2: Hisense Roku TV","proto":"NEC","bits":32,"keys":[["Power",1474553879,1],["Vol +",1474511039],["Vol -",1474543679],["Mute",1474502879],["Home",1474551839],["OK",1474533479]]},{"name":"Set 3: Legacy LCD (0x20DF)","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Input",551538735],["OK",551494365]]},{"name":"Set 4: Chinese Variant (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["OK",16712445]]}]},"xiaomi":{"name":"Xiaomi Mi TV","sets":[{"name":"Set 1: Mi TV Standard","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Vol +",2188238879],["Vol -",2188234799],["Mute",2188242959],["Home",2188197569],["Back",2188186859],["Menu",2188204199],["OK",2188187369],["Up",2188183289],["Down",2188215929],["Left",2188224089],["Right",2188199609]]},{"name":"Set 2: Mi Box / TV Variant","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Home",16761405],["OK",16712445]]}]},"toshiba":{"name":"Toshiba TV","sets":[{"name":"Set 1: Regza Japanese Standard","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Ch +",50149575],["Ch -",50182215],["Input",50141415],["OK",50176605]]},{"name":"Set 2: Toshiba Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 3: Toshiba Android TV","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["OK",16712445]]}]},"sharp":{"name":"Sharp Aquos","sets":[{"name":"Set 1: Aquos NEC","proto":"NEC","bits":32,"keys":[["Power",2857713855,1],["Vol +",2857754655],["Vol -",2857750575],["Mute",2857758735],["Input",2857730175],["OK",2857703145]]},{"name":"Set 2: Sharp Standard (0x55AA)","proto":"NEC","bits":32,"keys":[["Power",1437221055,1],["Vol +",1437261855],["Vol -",1437257775],["Mute",1437265935],["Input",1437237375],["OK",1437210345]]},{"name":"Set 3: Sharp Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"vizio":{"name":"Vizio TV","sets":[{"name":"Set 1: SmartCast","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Input",551538735],["OK",551494365]]},{"name":"Set 2: Vizio Legacy","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Input",16736415]]}]},"pioneer":{"name":"Pioneer TV","sets":[{"name":"Set 1: Kuro Plasma","proto":"NEC","bits":32,"keys":[["Power",2774153415,1],["Vol +",2774159535],["Vol -",2774192175],["Mute",2774157495],["Input",2774184015],["Menu",2774161575]]},{"name":"Set 2: Pioneer LCD","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["OK",12538796]]}]},"jvc":{"name":"JVC TV","sets":[{"name":"Set 1: JVC NEC","proto":"NEC","bits":32,"keys":[["Power",66865335,1],["Vol +",66869415],["Vol -",66902055],["Mute",66877575],["Input",66853095],["OK",66888285]]},{"name":"Set 2: JVC Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"hitachi":{"name":"Hitachi TV","sets":[{"name":"Set 1: Hitachi NEC","proto":"NEC","bits":32,"keys":[["Power",1353660615,1],["Vol +",1353666735],["Vol -",1353699375],["Mute",1353664695],["Input",1353691215],["OK",1353651945]]},{"name":"Set 2: Hitachi Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"grundig":{"name":"Grundig TV","sets":[{"name":"Set 1: TP6/TP7 Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Grundig Smart (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["OK",33464925]]}]},"telefunken":{"name":"Telefunken TV","sets":[{"name":"Set 1: Vestel Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Thomson Chassis","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["OK",1086265065]]}]},"thomson":{"name":"Thomson TV","sets":[{"name":"Set 1: TCL/Thomson Modern","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["Source",1086292095],["OK",1086265065]]},{"name":"Set 2: Thomson RC5","proto":"NEC","bits":32,"keys":[["Power",12,1],["Vol +",16],["Vol -",17],["Mute",13],["Ch +",32],["Ch -",33]]}]},"blaupunkt":{"name":"Blaupunkt TV","sets":[{"name":"Set 1: UMC/Vestel Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Blaupunkt Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["OK",16748655]]}]}},"audio":{"samsung_audio":{"name":"Samsung Soundbar & Audio","sets":[{"name":"Set 1: HW-Q / HW-R Series","proto":"NEC","bits":32,"keys":[["Power",3268051071,1],["Vol +",3268022511],["Vol -",3268055151],["Mute",3268030671],["Source",3268038831],["Sound Mode",3268071471],["Bass +",3268046991],["Bass -",3268079631],["Bluetooth",3268034751]]},{"name":"Set 2: HW-M / HW-K Series","proto":"NEC","bits":32,"keys":[["Power",3827019855,1],["Vol +",3827036175],["Vol -",3827032095],["Mute",3827028015],["Source",3827003535],["Sound",3826987215]]},{"name":"Set 3: Soundbar Legacy (0xE0E0)","proto":"NEC","bits":32,"keys":[["Power",3772793023,1],["Vol +",3772833823],["Vol -",3772829743],["Mute",3772837903],["Source",3772809343]]}]},"lg_audio":{"name":"LG Soundbar & Audio","sets":[{"name":"Set 1: AKB Series / SK & SL","proto":"NEC","bits":32,"keys":[["Power",2289500925,1],["Vol +",2289502965],["Vol -",2289502455],["Mute",2289501945],["Function",2289501435],["Sound Effect",2289503985],["Optical",2289505515],["Bluetooth",2289506025]]},{"name":"Set 2: LG Hi-Fi Variant (0x20DF)","proto":"NEC","bits":32,"keys":[["Power",551507370,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Function",551538735]]},{"name":"Set 3: LG Soundbar Legacy","proto":"NEC","bits":32,"keys":[["Power",2289504495,1],["Vol +",2289516735],["Vol -",2289549375],["Mute",2289537135]]}]},"sony_audio":{"name":"Sony Soundbar & AV Receiver","sets":[{"name":"Set 1: Sony AV Receiver / Soundbar (12-bit)","proto":"Sony","bits":12,"keys":[["Power",1344,1],["Vol +",576],["Vol -",1600],["Mute",320],["Input",2624],["Bass",3648]]},{"name":"Set 2: Sony HT Soundbar (15-bit)","proto":"Sony","bits":15,"keys":[["Power",21632,1],["Vol +",9344],["Vol -",25728],["Mute",5248],["TV Input",1152],["Bluetooth",33920]]},{"name":"Set 3: Sony Discrete Power","proto":"Sony","bits":12,"keys":[["Power ON",1346,1],["Power OFF",1347,1],["Vol +",576],["Vol -",1600],["Mute",320]]}]},"jbl":{"name":"JBL Soundbar","sets":[{"name":"Set 1: Bar 2.1 / Bar 5.1 / Cinema SB","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255],["Bass +",2155837575],["Bass -",2155870215],["TV",2155845735],["Bluetooth",2155853895],["HDMI",2155849815]]},{"name":"Set 2: Bar 9.1 / MultiBeam","proto":"NEC","bits":32,"keys":[["Power",2155806975,1],["Vol +",2155823295],["Vol -",2155855935],["Mute",2155815135],["Source",2155831455]]},{"name":"Set 3: Cinema SB150/250 (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Vol +",16736415],["Vol -",16752735],["Mute",16769055],["Optical",16744575],["Bluetooth",16728255]]}]},"bose":{"name":"Bose Soundbar & Audio","sets":[{"name":"Set 1: Solo & Soundbar 500/700","proto":"NEC","bits":32,"keys":[["Power",1587640455,1],["Vol +",1587632295],["Vol -",1587664935],["Mute",1587648615],["TV",1587656775],["Bluetooth",1587624135],["Bass",1587615975]]},{"name":"Set 2: Wave Music System","proto":"NEC","bits":32,"keys":[["Power",1587664935,1],["Vol +",1587656775],["Vol -",1587624135],["Mute",1587673095],["AUX",1587611895],["CD",1587644535],["FM/AM",1587628215]]},{"name":"Set 3: Lifestyle / Companion","proto":"NEC","bits":32,"keys":[["Power",1587609855,1],["Vol +",1587626175],["Vol -",1587658815],["Mute",1587618015]]}]},"yamaha":{"name":"Yamaha AV & Soundbar","sets":[{"name":"Set 1: AV Receiver / YAS Soundbar","proto":"NEC","bits":32,"keys":[["Power",2122405035,1],["Vol +",2122391265],["Vol -",2122440225],["Mute",2122399425],["Input +",2122407585],["Input -",2122440225],["Cinema DSP",2122395345],["Straight",2122423905]]},{"name":"Set 2: Discrete Power & Direct HDMI","proto":"NEC","bits":32,"keys":[["Power ON",2122415745,1],["Power OFF",2122448385,1],["Vol +",2122391265],["Vol -",2122440225],["Mute",2122399425],["HDMI 1",2122405545],["HDMI 2",2122421865],["Optical",2122433085],["Bluetooth",2122424925]]}]},"denon":{"name":"Denon AV Receiver","sets":[{"name":"Set 1: Denon AVR Remote","proto":"NEC","bits":32,"keys":[["Power",709624573,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423],["CBL/SAT",709630183],["Blu-ray",709662823],["Game",709646503],["Media Player",709679143]]},{"name":"Set 2: Discrete Power","proto":"NEC","bits":32,"keys":[["Power ON",709649053,1],["Power OFF",709681693,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423]]}]},"marantz":{"name":"Marantz Receiver","sets":[{"name":"Set 1: Slimline AVR","proto":"NEC","bits":32,"keys":[["Power",709624573,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423],["TV Audio",709658743]]}]},"onkyo":{"name":"Onkyo Receiver","sets":[{"name":"Set 1: TX-NR / HT-S","proto":"NEC","bits":32,"keys":[["Power",1261883694,1],["Vol +",1261846974],["Vol -",1261879614],["Mute",1261871454],["BD/DVD",1261838814],["TV/CD",1261887774]]}]},"harman":{"name":"Harman Kardon","sets":[{"name":"Set 1: Enchant / SB Series","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["HDMI",33429735],["Optical",33462375],["Bluetooth",33470535]]},{"name":"Set 2: AVR Classic","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255]]}]},"philips_audio":{"name":"Philips Soundbar & HTS","sets":[{"name":"Set 1: Soundbar / HTS (0x02FD)","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Optical",50141415],["Bluetooth",50174055]]},{"name":"Set 2: Micro Hi-Fi (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095]]}]},"pioneer_audio":{"name":"Pioneer VSX Receiver","sets":[{"name":"Set 1: VSX Audio","proto":"NEC","bits":32,"keys":[["Power",2774153415,1],["Vol +",2774159535],["Vol -",2774192175],["Mute",2774157495],["BD",2774184015],["TV",2774167695]]}]},"offbrand_audio":{"name":"Offbrand & Chinese Soundbar","sets":[{"name":"Set 1: Common Chinese Soundbar 0x00FF (Trevi/Silver/Denver)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Mode",16736415],["Play/Pause",16744575],["Next",16716015],["Prev",16748655],["EQ",16769055]]},{"name":"Set 2: Alternate Soundbar (0x807F)","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255],["Mode",2155837575],["Bluetooth",2155853895],["Optical",2155845735]]},{"name":"Set 3: Soundbar (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Mode",83595375],["Bluetooth",83562735]]}]}},"rgb":{"rgb24":{"name":"24-Key Magic RGB LED","sets":[{"name":"Set 1: Standard 24-Key (0x00F7)","proto":"NEC","bits":32,"keys":[["ON",16236607,1],["OFF",16203967,1],["Bright +",16187647],["Bright -",16220287],["Red",16195807],["Green",16228447],["Blue",16212127],["White",16244767],["Orange",16191727],["Pea Green",16224367],["Dark Blue",16208047],["Dark Yellow",16199887],["Cyan",16232527],["Brown",16216207],["Yellow",16189687],["Light Blue",16222327],["Pink",16206007],["Flash",16240687],["Strobe",16248847],["Fade",16238647],["Smooth",16246807]]},{"name":"Set 2: Variant 24-Key (0x00FF)","proto":"NEC","bits":32,"keys":[["ON",16712445,1],["OFF",16745085,1],["Bright +",16726725],["Bright -",16759365],["Red",16718565],["Green",16751205],["Blue",16753245],["White",16720605],["Flash",16722645],["Strobe",16755285],["Fade",16724685],["Smooth",16757325]]}]},"rgb44":{"name":"44-Key Multi-Color RGB LED","sets":[{"name":"Set 1: Full 44-Key DIY Controller","proto":"NEC","bits":32,"keys":[["ON",16712445,1],["OFF",16745085,1],["Bright +",16726725],["Bright -",16759365],["Play/Pause",16714485],["Red",16718565],["Green",16751205],["Blue",16753245],["White",16720605],["Red Up",16722135],["Red Down",16754775],["Green Up",16752735],["Green Down",16736415],["Blue Up",16738455],["Blue Down",16771095],["DIY 1",16724175],["DIY 2",16756815],["DIY 3",16740495],["DIY 4",16773135],["DIY 5",16713975],["DIY 6",16746615],["Auto",16730295],["Flash",16764975],["Speed +",16769055],["Speed -",16736415],["Jump 3",16720095],["Jump 7",16752735],["Fade 3",16726215],["Fade 7",16758855]]}]},"rgb17":{"name":"17-Key Mini RF/IR Strip","sets":[{"name":"Set 1: Standard 17-Key (0x00F7)","proto":"NEC","bits":32,"keys":[["Power",16203967,1],["Light",16187647],["Bright 100%",16220287],["Bright 50%",16195807],["Bright 25%",16228447],["Mode +",16212127],["Mode -",16244767],["Speed +",16191727],["Speed -",16224367]]}]},"tuya_rgb":{"name":"Tuya Smart Life IR LED","sets":[{"name":"Set 1: Tuya RGBW (0x00BF)","proto":"NEC","bits":32,"keys":[["Power",12574751,1],["Mode",12542111],["Bright +",12554351],["Bright -",12521711],["Red",12525791],["Green",12558431],["Blue",12542111],["White",12574751],["Music",12538031]]},{"name":"Set 2: Tuya Strip Variant (0x807F)","proto":"NEC","bits":32,"keys":[["Power",2155864095,1],["Bright +",2155843695],["Bright -",2155811055],["Color",2155815135],["Scene",2155827375]]}]},"govee":{"name":"Govee RGB & Dreamcolor","sets":[{"name":"Set 1: Govee 44/24-Key (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Bright +",33446055],["Bright -",33478695],["Warm",33454215],["Red",33429735],["Green",33462375],["Blue",33470535],["Music",33437895]]},{"name":"Set 2: Govee USB Strip (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Mode",16728255],["Speed",16760895],["Color",16720095]]}]},"mini_usb_rgb":{"name":"Mini USB LED Controller","sets":[{"name":"Set 1: Mini 6-Key (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Bright +",16736415],["Bright -",16752735],["Mode",16728255],["Color",16744575],["Speed",16720095]]}]}},"ac":{"gree":{"name":"Gree AC","sets":[{"name":"Set 1: Standard Gree","proto":"NEC","bits":32,"keys":[["Power",2122405035,1],["Temp +",2122391265],["Temp -",2122440225],["Mode Cool",2122407585],["Mode Heat",2122423905],["Fan Speed",2122399425],["Swing",2122395345],["Turbo",2122415745]]}]},"midea":{"name":"Midea AC","sets":[{"name":"Set 1: Standard Midea / Kaseikyo","proto":"Panasonic","bits":32,"keys":[["Power",2072305695,1],["Temp +",2072273055],["Temp -",2072289375],["Cool 24C",2072252655],["Heat 22C",2072285295],["Fan Auto",2072260815],["Swing",2072268975]]}]},"daikin":{"name":"Daikin AC","sets":[{"name":"Set 1: Standard Daikin","proto":"NEC","bits":32,"keys":[["Power",286146751,1],["Temp +",286187551],["Temp -",286183471],["Cool Mode",286163071],["Fan Auto",286152871],["Swing",286137061]]}]},"mitsubishi":{"name":"Mitsubishi AC","sets":[{"name":"Set 1: Standard Mitsubishi","proto":"NEC","bits":32,"keys":[["Power",600516313,1],["Temp +",600548953],["Temp -",600532633],["Cool Mode",600514273],["Heat Mode",600546913],["Fan Speed",600522433]]}]},"lg_ac":{"name":"LG Dual Inverter AC","sets":[{"name":"Set 1: Standard LG AC","proto":"NEC","bits":32,"keys":[["Power",143392849,1],["Temp +",142641999],["Temp -",142646111],["Jet Cool",142672025],["Fan Speed",142737576]]}]},"samsung_ac":{"name":"Samsung WindFree AC","sets":[{"name":"Set 1: Samsung AC","proto":"NEC","bits":32,"keys":[["Power",3772809343,1],["Temp +",3772793023],["Temp -",3772825663],["Mode Cool",3772784863],["WindFree",3772817503]]}]},"aux":{"name":"AUX AC","sets":[{"name":"Set 1: AUX Standard","proto":"NEC","bits":32,"keys":[["Power",3276587071,1],["Temp +",3276554431],["Temp -",3276570751],["Cool Mode",3276546271],["Fan Speed",3276578911]]}]},"haier":{"name":"Haier AC","sets":[{"name":"Set 1: Haier Standard","proto":"NEC","bits":32,"keys":[["Power",2707308735,1],["Temp +",2707349535],["Temp -",2707345455],["Cool Mode",2707325055],["Fan Speed",2707314855]]}]},"carrier":{"name":"Carrier AC","sets":[{"name":"Set 1: Carrier Standard","proto":"NEC","bits":32,"keys":[["Power",1303527615,1],["Temp +",1303568415],["Temp -",1303564335],["Cool Mode",1303543935],["Fan Auto",1303533735]]}]},"panasonic_ac":{"name":"Panasonic Inverter AC","sets":[{"name":"Set 1: Panasonic Inverter","proto":"Panasonic","bits":32,"keys":[["Power",1074004224,1],["Temp +",1074004228],["Temp -",1074004356],["Mode Cool",1074004300],["Fan Speed",1074004268]]}]}},"fan":{"dyson":{"name":"Dyson Pure / Cool Fan","sets":[{"name":"Set 1: Dyson Standard","proto":"NEC","bits":32,"keys":[["Power",1270145055,1],["Speed +",1270112415],["Speed -",1270128735],["Oscillate",1270096095],["Night Mode",1270145565],["Timer",1270092015]]}]},"xiaomi_fan":{"name":"Xiaomi Smart Fan","sets":[{"name":"Set 1: Xiaomi Fan","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Speed +",2188238879],["Speed -",2188234799],["Oscillate",2188214399],["Natural Wind",2188187369]]}]},"midea_fan":{"name":"Midea Standing Fan","sets":[{"name":"Set 1: Midea Fan","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Speed",12534206],["Oscillate",12534461],["Timer",12534716],["Mode",12534971]]}]},"honeywell":{"name":"Honeywell Tower Fan","sets":[{"name":"Set 1: Honeywell Fan","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Speed",16728255],["Oscillate",16760895],["Timer",16720095],["Breeze",16744575]]}]},"lasko":{"name":"Lasko Wind Machine","sets":[{"name":"Set 1: Lasko Fan","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Speed",16736925],["Oscillate",16754775],["Timer",16769565]]}]}},"projector":{"epson":{"name":"Epson 3LCD Projector","sets":[{"name":"Set 1: Epson Standard","proto":"NEC","bits":32,"keys":[["Power",1102987455,1],["Source Search",1103003775],["Menu",1102993575],["Enter / OK",1102976745],["Esc",1102977765],["Keystone +",1102972665],["Keystone -",1103005305]]}]},"benq":{"name":"BenQ DLP Projector","sets":[{"name":"Set 1: BenQ Standard","proto":"NEC","bits":32,"keys":[["Power",16728255,1],["Source",16744575],["Menu",16769055],["OK",16748655],["Eco Blank",16736415],["Auto",16716015]]}]},"optoma":{"name":"Optoma Home Projector","sets":[{"name":"Set 1: Optoma Standard","proto":"NEC","bits":32,"keys":[["Power ON",284115135,1],["Power OFF",284147775,1],["Source",284131455],["Menu",284155935],["OK",284104425],["Freeze",284106975]]}]},"viewsonic":{"name":"ViewSonic Projector","sets":[{"name":"Set 1: ViewSonic Standard","proto":"NEC","bits":32,"keys":[["Power",2205958335,1],["Source",2205974655],["Menu",2205964455],["Enter",2205947625],["Keystone",2205943545]]}]}},"media":{"appletv":{"name":"Apple TV Remote","sets":[{"name":"Set 1: Apple TV Silver Remote","proto":"NEC","bits":32,"keys":[["Menu",2011250879],["Play/Pause",2011242719],["Up",2011287599],["Down",2011279439],["Left",2011238639],["Right",2011291679],["Select / OK",2011281989]]}]},"roku":{"name":"Roku Streaming Box","sets":[{"name":"Set 1: Roku IR Remote","proto":"NEC","bits":32,"keys":[["Home",1474551839],["Back",1474520729],["OK",1474533479],["Up",1474533989],["Down",1474517669],["Left",1474501349],["Right",1474550309],["Play/Pause",1474535519],["Replay",1474503389]]}]},"mibox":{"name":"Xiaomi Mi Box S","sets":[{"name":"Set 1: Mi Box Standard","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Home",2188197569],["Back",2188186859],["OK",2188187369],["Up",2188183289],["Down",2188215929],["Left",2188224089],["Right",2188199609],["Vol +",2188238879],["Vol -",2188234799]]}]},"sony_bd":{"name":"Sony Blu-ray Player","sets":[{"name":"Set 1: Sony BD Player (15-bit)","proto":"Sony","bits":15,"keys":[["Power",21688,1],["Play",11448],["Stop",7352],["Pause",19640],["Home",1464],["Top Menu",15800],["OK",23992]]}]}}};
+let IR_APPLIANCES = {"tv":{"kunft":{"name":"Kunft TV (Worten)","sets":[{"name":"Set 1: Vestel RC1910 / Standard","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796],["Exit",12539051],["Info",12539306],["Up",12539561],["Down",12539816],["Left",12540071],["Right",12540326]]},{"name":"Set 2: Vestel Variant (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Ch +",33437895],["Ch -",33470535],["Source",33429735],["OK",33464925],["Menu",33462375],["Return",33433815]]},{"name":"Set 3: Chinese Smart OEM (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Ch +",16720605],["Ch -",16712445],["Source",16748655],["Home",16761405],["OK",16712445],["Back",16732845]]},{"name":"Set 4: MStar Android Kunft (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Ch +",83615775],["Ch -",83562735],["Input",83595375],["OK",83568855],["Home",83579055]]}]},"mitsai":{"name":"Mitsai TV (Worten)","sets":[{"name":"Set 1: Vestel Standard","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796]]},{"name":"Set 2: Konka / Mitsai Variant","proto":"NEC","bits":32,"keys":[["Power",150405885,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["Ch +",150423735],["Ch -",150407415],["AV",150438015],["OK",150410985]]},{"name":"Set 3: Mitsai Universal Chinese","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Vol +",16736415],["Vol -",16752735],["Mute",16769055],["Ch +",16720095],["Ch -",16711935],["Source",16728255],["OK",16748655]]}]},"silver":{"name":"Silver TV (Portugal)","sets":[{"name":"Set 1: Silver Smart TV (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Menu",16769055],["OK",16748655],["Back",16752735]]},{"name":"Set 2: Silver MStar (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Ch +",83615775],["Ch -",83562735],["Input",83595375],["OK",83568855]]},{"name":"Set 3: Silver Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"tdsystems":{"name":"TD Systems (Iberia)","sets":[{"name":"Set 1: K-Series (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Menu",16769055],["OK",16748655]]},{"name":"Set 2: Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 3: Android Smart (0x00FFA25D)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Home",16761405],["OK",16712445]]}]},"electronia":{"name":"Electronia (R\u00e1dio Popular)","sets":[{"name":"Set 1: Vestel RC1910","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Chinese Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Source",16748655],["OK",16712445]]}]},"selecline":{"name":"Selecline (Auchan)","sets":[{"name":"Set 1: Vestel Profile","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Skyworth Profile","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Source",33429735],["OK",33464925]]}]},"cecotec":{"name":"Cecotec TV","sets":[{"name":"Set 1: Android Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["Ch +",16720605],["Ch -",16712445],["Source",16748655],["Home",16761405],["OK",16712445]]},{"name":"Set 2: MStar Variant (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Input",83595375],["OK",83568855]]}]},"denver":{"name":"Denver / Engel / Axil","sets":[{"name":"Set 1: Denver LED (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Source",16736415],["OK",16748655]]},{"name":"Set 2: Engel Axil DVB (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["OK",33464925]]}]},"vestel":{"name":"Vestel Universal (OEM Euro)","sets":[{"name":"Set 1: RC1910 / RC4848 (Kunft/Mitsai/Sharp/Toshiba)","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Menu",12535736],["OK",12538796],["Exit",12539051],["Info",12539306],["Guide",12540071]]},{"name":"Set 2: RC2040 / 3040 Variant","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["Ch +",33437895],["Ch -",33470535],["Source",33429735],["OK",33464925]]},{"name":"Set 3: RC5 Chassis","proto":"NEC","bits":32,"keys":[["Power",150405885,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["OK",150410985]]}]},"panasonic":{"name":"Panasonic Viera / TV","sets":[{"name":"Set 1: Viera Kaseikyo / Modern (Panasonic)","proto":"Panasonic","bits":32,"keys":[["Power",1074004224,1],["Vol +",1074004228],["Vol -",1074004356],["Mute",1074004300],["Ch +",1074004268],["Ch -",1074004396],["Input",1074004384],["Menu",1074004298],["OK",1074004370],["Return",1074004434]]},{"name":"Set 2: Viera NEC Standard (RemoteCentral)","proto":"NEC","bits":32,"keys":[["Power",16825533,1],["Vol +",16778245],["Vol -",16811141],["Mute",16796749],["Ch +",16788525],["Ch -",16821421],["Input",16818337],["OK",16814739],["Return",16831187]]},{"name":"Set 3: Panasonic Android TV / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Ch +",12534971],["Ch -",12535226],["Source",12535481],["Home",12538796],["OK",12538796]]},{"name":"Set 4: Discrete Power & Direct HDMI","proto":"Panasonic","bits":32,"keys":[["Power ON",1074004284,1],["Power OFF",1074004476,1],["HDMI 1",1074004448],["HDMI 2",1074004320],["HDMI 3",1074004322],["Component",1074004256]]}]},"samsung":{"name":"Samsung TV","sets":[{"name":"Set 1: Modern Smart TV","proto":"NEC","bits":32,"keys":[["Power",3772793023,1],["Vol +",3772833823],["Vol -",3772829743],["Mute",3772837903],["Ch +",3772795063],["Ch -",3772778743],["Source",3772809343],["Menu",3772799143],["Return",3772783333],["Tools",3772831273],["Info",3772839943],["OK",3772782313],["Up",3772778233],["Down",3772810873],["Left",3772819033],["Right",3772794553],["HDMI",3772815208]]},{"name":"Set 2: Discrete Power & Direct HDMI","proto":"NEC","bits":32,"keys":[["Power ON",3772815718,1],["Power OFF",3772783078,1],["HDMI 1",3772829998],["HDMI 2",3772834078],["HDMI 3",3772818268],["HDMI 4",3772800163],["AV",3772817758],["Component",3772788433],["SmartHub",3772816993]]},{"name":"Set 3: Legacy LCD / Plasma","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Source",551538735],["OK",551494365]]},{"name":"Set 4: Older CRT / Variant","proto":"NEC","bits":32,"keys":[["Power",150421695,1],["Vol +",150462495],["Vol -",150458415],["Mute",150466575],["Source",150438015]]}]},"lg":{"name":"LG TV","sets":[{"name":"Set 1: WebOS & Standard LCD","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Input",551538735],["Home",551501505],["Back",551490795],["Settings",551535165],["OK",551494365],["Up",551486205],["Down",551518845],["Left",551542815],["Right",551510175]]},{"name":"Set 2: Discrete Power & Direct Inputs","proto":"NEC","bits":32,"keys":[["Power ON",551494620,1],["Power OFF",551515020,1],["HDMI 1",551515020],["HDMI 2",551498700],["HDMI 3",551524200],["HDMI 4",551509410],["AV",551508645],["Component",551539755]]},{"name":"Set 3: Legacy Goldstar / LG CRT/LCD","proto":"NEC","bits":32,"keys":[["Power",2155811055,1],["Vol +",2155823295],["Vol -",2155855935],["Mute",2155843695],["Ch +",2155806975],["Ch -",2155839615],["Input",2155860015],["OK",2155815645]]},{"name":"Set 4: LG Service Menu & Diagnostics","proto":"NEC","bits":32,"keys":[["In-Start",551542560],["Ez-Adjust",551550720],["Power-Only",551550465],["Eye-Q",551531595]]}]},"sony":{"name":"Sony Bravia","sets":[{"name":"Set 1: Bravia 12-bit Standard","proto":"Sony","bits":12,"keys":[["Power",2704,1],["Vol +",1168],["Vol -",3216],["Mute",656],["Ch +",144],["Ch -",2192],["Input",2640],["Home",112],["Return",3184],["Wide",3304],["OK",2672],["Up",752],["Down",2800],["Left",720],["Right",3280]]},{"name":"Set 2: Discrete Power & Direct Video (15-bit)","proto":"Sony","bits":15,"keys":[["Power ON",1872,1],["Power OFF",3920,1],["HDMI 1",2608],["HDMI 2",2352],["HDMI 3",1328],["HDMI 4",816],["Video 1",48],["Video 2",2096]]},{"name":"Set 3: Bravia Android TV (15-bit)","proto":"Sony","bits":15,"keys":[["Power",1168,1],["Vol +",576],["Vol -",1600],["Mute",320],["Input",1344],["Home",112],["Action Menu",624],["OK",112]]}]},"philips":{"name":"Philips TV","sets":[{"name":"Set 1: Modern Android TV / TP Vision (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Ch +",16744575],["Ch -",16712445],["Source",16736415],["Home",16716015],["OK",16748655],["Back",16752735]]},{"name":"Set 2: Philips Smart TV Variant (0x02FD)","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Ch +",50149575],["Ch -",50182215],["Source",50141415],["OK",50176605]]},{"name":"Set 3: Philips RC6 Mode 0","proto":"NEC","bits":32,"keys":[["Power",4108,1],["Vol +",4112],["Vol -",4113],["Mute",4109],["Ch +",4128],["Ch -",4129],["Source",4152]]},{"name":"Set 4: Philips RC5 Legacy","proto":"NEC","bits":32,"keys":[["Power",12,1],["Vol +",16],["Vol -",17],["Mute",13],["Ch +",32],["Ch -",33]]}]},"tcl":{"name":"TCL TV","sets":[{"name":"Set 1: Modern Android & Google TV","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["Ch +",1086277815],["Ch -",1086261495],["Source",1086292095],["Home",1086290055],["OK",1086265065],["Up",1086260985],["Down",1086293625],["Left",1086301785],["Right",1086277305],["Back",1086266085]]},{"name":"Set 2: TCL Roku TV","proto":"NEC","bits":32,"keys":[["Power",1474553879,1],["Vol +",1474511039],["Vol -",1474543679],["Mute",1474502879],["Home",1474551839],["OK",1474533479],["Back",1474520729],["Up",1474533989],["Down",1474517669]]},{"name":"Set 3: TCL Legacy / Thomson","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["OK",12538796]]}]},"hisense":{"name":"Hisense TV","sets":[{"name":"Set 1: VIDAA Smart TV","proto":"NEC","bits":32,"keys":[["Power",4244783295,1],["Vol +",4244824095],["Vol -",4244820015],["Mute",4244828175],["Ch +",4244785335],["Ch -",4244769015],["Source",4244799615],["Home",4244782785],["OK",4244772585],["Back",4244773605],["Menu",4244789415]]},{"name":"Set 2: Hisense Roku TV","proto":"NEC","bits":32,"keys":[["Power",1474553879,1],["Vol +",1474511039],["Vol -",1474543679],["Mute",1474502879],["Home",1474551839],["OK",1474533479]]},{"name":"Set 3: Legacy LCD (0x20DF)","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Ch +",551485695],["Ch -",551518335],["Input",551538735],["OK",551494365]]},{"name":"Set 4: Chinese Variant (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Mute",16769565],["OK",16712445]]}]},"xiaomi":{"name":"Xiaomi Mi TV","sets":[{"name":"Set 1: Mi TV Standard","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Vol +",2188238879],["Vol -",2188234799],["Mute",2188242959],["Home",2188197569],["Back",2188186859],["Menu",2188204199],["OK",2188187369],["Up",2188183289],["Down",2188215929],["Left",2188224089],["Right",2188199609]]},{"name":"Set 2: Mi Box / TV Variant","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["Home",16761405],["OK",16712445]]}]},"toshiba":{"name":"Toshiba TV","sets":[{"name":"Set 1: Regza Japanese Standard","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Ch +",50149575],["Ch -",50182215],["Input",50141415],["OK",50176605]]},{"name":"Set 2: Toshiba Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 3: Toshiba Android TV","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Vol +",16736925],["Vol -",16754775],["OK",16712445]]}]},"sharp":{"name":"Sharp Aquos","sets":[{"name":"Set 1: Aquos NEC","proto":"NEC","bits":32,"keys":[["Power",2857713855,1],["Vol +",2857754655],["Vol -",2857750575],["Mute",2857758735],["Input",2857730175],["OK",2857703145]]},{"name":"Set 2: Sharp Standard (0x55AA)","proto":"NEC","bits":32,"keys":[["Power",1437221055,1],["Vol +",1437261855],["Vol -",1437257775],["Mute",1437265935],["Input",1437237375],["OK",1437210345]]},{"name":"Set 3: Sharp Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"vizio":{"name":"Vizio TV","sets":[{"name":"Set 1: SmartCast","proto":"NEC","bits":32,"keys":[["Power",551489775,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Input",551538735],["OK",551494365]]},{"name":"Set 2: Vizio Legacy","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Input",16736415]]}]},"pioneer":{"name":"Pioneer TV","sets":[{"name":"Set 1: Kuro Plasma","proto":"NEC","bits":32,"keys":[["Power",2774153415,1],["Vol +",2774159535],["Vol -",2774192175],["Mute",2774157495],["Input",2774184015],["Menu",2774161575]]},{"name":"Set 2: Pioneer LCD","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["OK",12538796]]}]},"jvc":{"name":"JVC TV","sets":[{"name":"Set 1: JVC NEC","proto":"NEC","bits":32,"keys":[["Power",66865335,1],["Vol +",66869415],["Vol -",66902055],["Mute",66877575],["Input",66853095],["OK",66888285]]},{"name":"Set 2: JVC Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"hitachi":{"name":"Hitachi TV","sets":[{"name":"Set 1: Hitachi NEC","proto":"NEC","bits":32,"keys":[["Power",1353660615,1],["Vol +",1353666735],["Vol -",1353699375],["Mute",1353664695],["Input",1353691215],["OK",1353651945]]},{"name":"Set 2: Hitachi Europe / Vestel","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]}]},"grundig":{"name":"Grundig TV","sets":[{"name":"Set 1: TP6/TP7 Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Grundig Smart (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["OK",33464925]]}]},"telefunken":{"name":"Telefunken TV","sets":[{"name":"Set 1: Vestel Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Thomson Chassis","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["OK",1086265065]]}]},"thomson":{"name":"Thomson TV","sets":[{"name":"Set 1: TCL/Thomson Modern","proto":"NEC","bits":32,"keys":[["Power",1086275775,1],["Vol +",1086316575],["Vol -",1086312495],["Mute",1086320655],["Source",1086292095],["OK",1086265065]]},{"name":"Set 2: Thomson RC5","proto":"NEC","bits":32,"keys":[["Power",12,1],["Vol +",16],["Vol -",17],["Mute",13],["Ch +",32],["Ch -",33]]}]},"blaupunkt":{"name":"Blaupunkt TV","sets":[{"name":"Set 1: UMC/Vestel Chassis","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Vol +",12534206],["Vol -",12534461],["Mute",12534716],["Source",12535481],["OK",12538796]]},{"name":"Set 2: Blaupunkt Smart (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["OK",16748655]]}]}},"audio":{"samsung_audio":{"name":"Samsung Soundbar & Audio","sets":[{"name":"Set 1: HW-Q / HW-R Series","proto":"NEC","bits":32,"keys":[["Power",3268051071,1],["Vol +",3268022511],["Vol -",3268055151],["Mute",3268030671],["Source",3268038831],["Sound Mode",3268071471],["Bass +",3268046991],["Bass -",3268079631],["Bluetooth",3268034751]]},{"name":"Set 2: HW-M / HW-K Series","proto":"NEC","bits":32,"keys":[["Power",3827019855,1],["Vol +",3827036175],["Vol -",3827032095],["Mute",3827028015],["Source",3827003535],["Sound",3826987215]]},{"name":"Set 3: Soundbar Legacy (0xE0E0)","proto":"NEC","bits":32,"keys":[["Power",3772793023,1],["Vol +",3772833823],["Vol -",3772829743],["Mute",3772837903],["Source",3772809343]]}]},"lg_audio":{"name":"LG Soundbar & Audio","sets":[{"name":"Set 1: AKB Series / SK & SL","proto":"NEC","bits":32,"keys":[["Power",2289500925,1],["Vol +",2289502965],["Vol -",2289502455],["Mute",2289501945],["Function",2289501435],["Sound Effect",2289503985],["Optical",2289505515],["Bluetooth",2289506025]]},{"name":"Set 2: LG Hi-Fi Variant (0x20DF)","proto":"NEC","bits":32,"keys":[["Power",551507370,1],["Vol +",551502015],["Vol -",551534655],["Mute",551522415],["Function",551538735]]},{"name":"Set 3: LG Soundbar Legacy","proto":"NEC","bits":32,"keys":[["Power",2289504495,1],["Vol +",2289516735],["Vol -",2289549375],["Mute",2289537135]]}]},"sony_audio":{"name":"Sony Soundbar & AV Receiver","sets":[{"name":"Set 1: Sony AV Receiver / Soundbar (12-bit)","proto":"Sony","bits":12,"keys":[["Power",1344,1],["Vol +",576],["Vol -",1600],["Mute",320],["Input",2624],["Bass",3648]]},{"name":"Set 2: Sony HT Soundbar (15-bit)","proto":"Sony","bits":15,"keys":[["Power",21632,1],["Vol +",9344],["Vol -",25728],["Mute",5248],["TV Input",1152],["Bluetooth",33920]]},{"name":"Set 3: Sony Discrete Power","proto":"Sony","bits":12,"keys":[["Power ON",1346,1],["Power OFF",1347,1],["Vol +",576],["Vol -",1600],["Mute",320]]}]},"jbl":{"name":"JBL Soundbar","sets":[{"name":"Set 1: Bar 2.1 / Bar 5.1 / Cinema SB","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255],["Bass +",2155837575],["Bass -",2155870215],["TV",2155845735],["Bluetooth",2155853895],["HDMI",2155849815]]},{"name":"Set 2: Bar 9.1 / MultiBeam","proto":"NEC","bits":32,"keys":[["Power",2155806975,1],["Vol +",2155823295],["Vol -",2155855935],["Mute",2155815135],["Source",2155831455]]},{"name":"Set 3: Cinema SB150/250 (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Vol +",16736415],["Vol -",16752735],["Mute",16769055],["Optical",16744575],["Bluetooth",16728255]]}]},"bose":{"name":"Bose Soundbar & Audio","sets":[{"name":"Set 1: Solo & Soundbar 500/700","proto":"NEC","bits":32,"keys":[["Power",1587640455,1],["Vol +",1587632295],["Vol -",1587664935],["Mute",1587648615],["TV",1587656775],["Bluetooth",1587624135],["Bass",1587615975]]},{"name":"Set 2: Wave Music System","proto":"NEC","bits":32,"keys":[["Power",1587664935,1],["Vol +",1587656775],["Vol -",1587624135],["Mute",1587673095],["AUX",1587611895],["CD",1587644535],["FM/AM",1587628215]]},{"name":"Set 3: Lifestyle / Companion","proto":"NEC","bits":32,"keys":[["Power",1587609855,1],["Vol +",1587626175],["Vol -",1587658815],["Mute",1587618015]]}]},"yamaha":{"name":"Yamaha AV & Soundbar","sets":[{"name":"Set 1: AV Receiver / YAS Soundbar","proto":"NEC","bits":32,"keys":[["Power",2122405035,1],["Vol +",2122391265],["Vol -",2122440225],["Mute",2122399425],["Input +",2122407585],["Input -",2122440225],["Cinema DSP",2122395345],["Straight",2122423905]]},{"name":"Set 2: Discrete Power & Direct HDMI","proto":"NEC","bits":32,"keys":[["Power ON",2122415745,1],["Power OFF",2122448385,1],["Vol +",2122391265],["Vol -",2122440225],["Mute",2122399425],["HDMI 1",2122405545],["HDMI 2",2122421865],["Optical",2122433085],["Bluetooth",2122424925]]}]},"denon":{"name":"Denon AV Receiver","sets":[{"name":"Set 1: Denon AVR Remote","proto":"NEC","bits":32,"keys":[["Power",709624573,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423],["CBL/SAT",709630183],["Blu-ray",709662823],["Game",709646503],["Media Player",709679143]]},{"name":"Set 2: Discrete Power","proto":"NEC","bits":32,"keys":[["Power ON",709649053,1],["Power OFF",709681693,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423]]}]},"marantz":{"name":"Marantz Receiver","sets":[{"name":"Set 1: Slimline AVR","proto":"NEC","bits":32,"keys":[["Power",709624573,1],["Vol +",709634263],["Vol -",709666903],["Mute",709642423],["TV Audio",709658743]]}]},"onkyo":{"name":"Onkyo Receiver","sets":[{"name":"Set 1: TX-NR / HT-S","proto":"NEC","bits":32,"keys":[["Power",1261883694,1],["Vol +",1261846974],["Vol -",1261879614],["Mute",1261871454],["BD/DVD",1261838814],["TV/CD",1261887774]]}]},"harman":{"name":"Harman Kardon","sets":[{"name":"Set 1: Enchant / SB Series","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Vol +",33446055],["Vol -",33478695],["Mute",33454215],["HDMI",33429735],["Optical",33462375],["Bluetooth",33470535]]},{"name":"Set 2: AVR Classic","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255]]}]},"philips_audio":{"name":"Philips Soundbar & HTS","sets":[{"name":"Set 1: Soundbar / HTS (0x02FD)","proto":"NEC","bits":32,"keys":[["Power",50153655,1],["Vol +",50157735],["Vol -",50190375],["Mute",50165895],["Optical",50141415],["Bluetooth",50174055]]},{"name":"Set 2: Micro Hi-Fi (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095]]}]},"pioneer_audio":{"name":"Pioneer VSX Receiver","sets":[{"name":"Set 1: VSX Audio","proto":"NEC","bits":32,"keys":[["Power",2774153415,1],["Vol +",2774159535],["Vol -",2774192175],["Mute",2774157495],["BD",2774184015],["TV",2774167695]]}]},"offbrand_audio":{"name":"Offbrand & Chinese Soundbar","sets":[{"name":"Set 1: Common Chinese Soundbar 0x00FF (Trevi/Silver/Denver)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Vol +",16728255],["Vol -",16760895],["Mute",16720095],["Mode",16736415],["Play/Pause",16744575],["Next",16716015],["Prev",16748655],["EQ",16769055]]},{"name":"Set 2: Alternate Soundbar (0x807F)","proto":"NEC","bits":32,"keys":[["Power",2155813095,1],["Vol +",2155829415],["Vol -",2155862055],["Mute",2155821255],["Mode",2155837575],["Bluetooth",2155853895],["Optical",2155845735]]},{"name":"Set 3: Soundbar (0x04FB)","proto":"NEC","bits":32,"keys":[["Power",83574975,1],["Vol +",83566815],["Vol -",83599455],["Mute",83583135],["Mode",83595375],["Bluetooth",83562735]]}]}},"rgb":{"rgb24":{"name":"24-Key Magic RGB LED","sets":[{"name":"Set 1: Standard 24-Key (0x00F7)","proto":"NEC","bits":32,"keys":[["ON",16236607,1],["OFF",16203967,1],["Bright +",16187647],["Bright -",16220287],["Red",16195807],["Green",16228447],["Blue",16212127],["White",16244767],["Orange",16191727],["Pea Green",16224367],["Dark Blue",16208047],["Dark Yellow",16199887],["Cyan",16232527],["Brown",16216207],["Yellow",16189687],["Light Blue",16222327],["Pink",16206007],["Flash",16240687],["Strobe",16248847],["Fade",16238647],["Smooth",16246807]]},{"name":"Set 2: Variant 24-Key (0x00FF)","proto":"NEC","bits":32,"keys":[["ON",16712445,1],["OFF",16745085,1],["Bright +",16726725],["Bright -",16759365],["Red",16718565],["Green",16751205],["Blue",16753245],["White",16720605],["Flash",16722645],["Strobe",16755285],["Fade",16724685],["Smooth",16757325]]}]},"rgb44":{"name":"44-Key Multi-Color RGB LED","sets":[{"name":"Set 1: Full 44-Key DIY Controller","proto":"NEC","bits":32,"keys":[["ON",16712445,1],["OFF",16745085,1],["Bright +",16726725],["Bright -",16759365],["Play/Pause",16714485],["Red",16718565],["Green",16751205],["Blue",16753245],["White",16720605],["Red Up",16722135],["Red Down",16754775],["Green Up",16752735],["Green Down",16736415],["Blue Up",16738455],["Blue Down",16771095],["DIY 1",16724175],["DIY 2",16756815],["DIY 3",16740495],["DIY 4",16773135],["DIY 5",16713975],["DIY 6",16746615],["Auto",16730295],["Flash",16764975],["Speed +",16769055],["Speed -",16736415],["Jump 3",16720095],["Jump 7",16752735],["Fade 3",16726215],["Fade 7",16758855]]}]},"rgb17":{"name":"17-Key Mini RF/IR Strip","sets":[{"name":"Set 1: Standard 17-Key (0x00F7)","proto":"NEC","bits":32,"keys":[["Power",16203967,1],["Light",16187647],["Bright 100%",16220287],["Bright 50%",16195807],["Bright 25%",16228447],["Mode +",16212127],["Mode -",16244767],["Speed +",16191727],["Speed -",16224367]]}]},"tuya_rgb":{"name":"Tuya Smart Life IR LED","sets":[{"name":"Set 1: Tuya RGBW (0x00BF)","proto":"NEC","bits":32,"keys":[["Power",12574751,1],["Mode",12542111],["Bright +",12554351],["Bright -",12521711],["Red",12525791],["Green",12558431],["Blue",12542111],["White",12574751],["Music",12538031]]},{"name":"Set 2: Tuya Strip Variant (0x807F)","proto":"NEC","bits":32,"keys":[["Power",2155864095,1],["Bright +",2155843695],["Bright -",2155811055],["Color",2155815135],["Scene",2155827375]]}]},"govee":{"name":"Govee RGB & Dreamcolor","sets":[{"name":"Set 1: Govee 44/24-Key (0x01FE)","proto":"NEC","bits":32,"keys":[["Power",33441975,1],["Bright +",33446055],["Bright -",33478695],["Warm",33454215],["Red",33429735],["Green",33462375],["Blue",33470535],["Music",33437895]]},{"name":"Set 2: Govee USB Strip (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Mode",16728255],["Speed",16760895],["Color",16720095]]}]},"mini_usb_rgb":{"name":"Mini USB LED Controller","sets":[{"name":"Set 1: Mini 6-Key (0x00FF)","proto":"NEC","bits":32,"keys":[["Power",16712445,1],["Bright +",16736415],["Bright -",16752735],["Mode",16728255],["Color",16744575],["Speed",16720095]]}]}},"ac":{"gree":{"name":"Gree AC","sets":[{"name":"Set 1: Standard Gree","proto":"NEC","bits":32,"keys":[["Power",2122405035,1],["Temp +",2122391265],["Temp -",2122440225],["Mode Cool",2122407585],["Mode Heat",2122423905],["Fan Speed",2122399425],["Swing",2122395345],["Turbo",2122415745]]}]},"midea":{"name":"Midea AC","sets":[{"name":"Set 1: Standard Midea / Kaseikyo","proto":"Panasonic","bits":32,"keys":[["Power",2072305695,1],["Temp +",2072273055],["Temp -",2072289375],["Cool 24C",2072252655],["Heat 22C",2072285295],["Fan Auto",2072260815],["Swing",2072268975]]}]},"daikin":{"name":"Daikin AC","sets":[{"name":"Set 1: Standard Daikin","proto":"NEC","bits":32,"keys":[["Power",286146751,1],["Temp +",286187551],["Temp -",286183471],["Cool Mode",286163071],["Fan Auto",286152871],["Swing",286137061]]}]},"mitsubishi":{"name":"Mitsubishi AC","sets":[{"name":"Set 1: Standard Mitsubishi","proto":"NEC","bits":32,"keys":[["Power",600516313,1],["Temp +",600548953],["Temp -",600532633],["Cool Mode",600514273],["Heat Mode",600546913],["Fan Speed",600522433]]}]},"lg_ac":{"name":"LG Dual Inverter AC","sets":[{"name":"Set 1: Standard LG AC","proto":"NEC","bits":32,"keys":[["Power",143392849,1],["Temp +",142641999],["Temp -",142646111],["Jet Cool",142672025],["Fan Speed",142737576]]}]},"samsung_ac":{"name":"Samsung WindFree AC","sets":[{"name":"Set 1: Samsung AC","proto":"NEC","bits":32,"keys":[["Power",3772809343,1],["Temp +",3772793023],["Temp -",3772825663],["Mode Cool",3772784863],["WindFree",3772817503]]}]},"aux":{"name":"AUX AC","sets":[{"name":"Set 1: AUX Standard","proto":"NEC","bits":32,"keys":[["Power",3276587071,1],["Temp +",3276554431],["Temp -",3276570751],["Cool Mode",3276546271],["Fan Speed",3276578911]]}]},"haier":{"name":"Haier AC","sets":[{"name":"Set 1: Haier Standard","proto":"NEC","bits":32,"keys":[["Power",2707308735,1],["Temp +",2707349535],["Temp -",2707345455],["Cool Mode",2707325055],["Fan Speed",2707314855]]}]},"carrier":{"name":"Carrier AC","sets":[{"name":"Set 1: Carrier Standard","proto":"NEC","bits":32,"keys":[["Power",1303527615,1],["Temp +",1303568415],["Temp -",1303564335],["Cool Mode",1303543935],["Fan Auto",1303533735]]}]},"panasonic_ac":{"name":"Panasonic Inverter AC","sets":[{"name":"Set 1: Panasonic Inverter","proto":"Panasonic","bits":32,"keys":[["Power",1074004224,1],["Temp +",1074004228],["Temp -",1074004356],["Mode Cool",1074004300],["Fan Speed",1074004268]]}]}},"fan":{"dyson":{"name":"Dyson Pure / Cool Fan","sets":[{"name":"Set 1: Dyson Standard","proto":"NEC","bits":32,"keys":[["Power",1270145055,1],["Speed +",1270112415],["Speed -",1270128735],["Oscillate",1270096095],["Night Mode",1270145565],["Timer",1270092015]]}]},"xiaomi_fan":{"name":"Xiaomi Smart Fan","sets":[{"name":"Set 1: Xiaomi Fan","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Speed +",2188238879],["Speed -",2188234799],["Oscillate",2188214399],["Natural Wind",2188187369]]}]},"midea_fan":{"name":"Midea Standing Fan","sets":[{"name":"Set 1: Midea Fan","proto":"NEC","bits":32,"keys":[["Power",12536246,1],["Speed",12534206],["Oscillate",12534461],["Timer",12534716],["Mode",12534971]]}]},"honeywell":{"name":"Honeywell Tower Fan","sets":[{"name":"Set 1: Honeywell Fan","proto":"NEC","bits":32,"keys":[["Power",16711935,1],["Speed",16728255],["Oscillate",16760895],["Timer",16720095],["Breeze",16744575]]}]},"lasko":{"name":"Lasko Wind Machine","sets":[{"name":"Set 1: Lasko Fan","proto":"NEC","bits":32,"keys":[["Power",16753245,1],["Speed",16736925],["Oscillate",16754775],["Timer",16769565]]}]}},"projector":{"epson":{"name":"Epson 3LCD Projector","sets":[{"name":"Set 1: Epson Standard","proto":"NEC","bits":32,"keys":[["Power",1102987455,1],["Source Search",1103003775],["Menu",1102993575],["Enter / OK",1102976745],["Esc",1102977765],["Keystone +",1102972665],["Keystone -",1103005305]]}]},"benq":{"name":"BenQ DLP Projector","sets":[{"name":"Set 1: BenQ Standard","proto":"NEC","bits":32,"keys":[["Power",16728255,1],["Source",16744575],["Menu",16769055],["OK",16748655],["Eco Blank",16736415],["Auto",16716015]]}]},"optoma":{"name":"Optoma Home Projector","sets":[{"name":"Set 1: Optoma Standard","proto":"NEC","bits":32,"keys":[["Power ON",284115135,1],["Power OFF",284147775,1],["Source",284131455],["Menu",284155935],["OK",284104425],["Freeze",284106975]]}]},"viewsonic":{"name":"ViewSonic Projector","sets":[{"name":"Set 1: ViewSonic Standard","proto":"NEC","bits":32,"keys":[["Power",2205958335,1],["Source",2205974655],["Menu",2205964455],["Enter",2205947625],["Keystone",2205943545]]}]}},"media":{"appletv":{"name":"Apple TV Remote","sets":[{"name":"Set 1: Apple TV Silver Remote","proto":"NEC","bits":32,"keys":[["Menu",2011250879],["Play/Pause",2011242719],["Up",2011287599],["Down",2011279439],["Left",2011238639],["Right",2011291679],["Select / OK",2011281989]]}]},"roku":{"name":"Roku Streaming Box","sets":[{"name":"Set 1: Roku IR Remote","proto":"NEC","bits":32,"keys":[["Home",1474551839],["Back",1474520729],["OK",1474533479],["Up",1474533989],["Down",1474517669],["Left",1474501349],["Right",1474550309],["Play/Pause",1474535519],["Replay",1474503389]]}]},"mibox":{"name":"Xiaomi Mi Box S","sets":[{"name":"Set 1: Mi Box Standard","proto":"NEC","bits":32,"keys":[["Power",2188198079,1],["Home",2188197569],["Back",2188186859],["OK",2188187369],["Up",2188183289],["Down",2188215929],["Left",2188224089],["Right",2188199609],["Vol +",2188238879],["Vol -",2188234799]]}]},"sony_bd":{"name":"Sony Blu-ray Player","sets":[{"name":"Set 1: Sony BD Player (15-bit)","proto":"Sony","bits":15,"keys":[["Power",21688,1],["Play",11448],["Stop",7352],["Pause",19640],["Home",1464],["Top Menu",15800],["OK",23992]]}]}}};
+
+let dashContainers = JSON.parse(localStorage.getItem('gk_dash_containers') || 'null');
+if (!dashContainers || !Array.isArray(dashContainers) || dashContainers.length === 0) {
+  dashContainers = [
+    { id: 'c_default', name: 'Smart Home Dashboard', icon: '🏠', filter: 'All' }
+  ];
+}
+let containerActiveChips = {};
+let currentEditingKeyIdx = -1;
+let recordedModalRaw = null;
+let isButtonRecording = false;
+let btnRecordInterval = null;
 
 const i18n = {
   en: {
@@ -1230,7 +1436,11 @@ const i18n = {
     tab_sniff: "Sniffer",
     tab_manual: "Manual",
     tab_fuzzer: "Fuzzer",
-    tab_wiring: "Wiring & About",
+    tab_setup: "Setup",
+    tab_wiring: "Setup",
+    setup_title: "Setup & Hardware Pinout Guide",
+    add_container: "Add Container",
+    edit_container: "Edit Container",
     tab_settings: "Settings",
     cat_all: "All",
     cat_gate: "Gate",
@@ -1242,7 +1452,7 @@ const i18n = {
     cat_audio: "Audio",
     cat_fan: "Fan",
     cat_other: "Other",
-    dash_title: "Smart Home Dashboard",
+    dash_title: "Dashboard",
     add_device: "Add Device",
     refresh: "Refresh",
     no_presets: "No devices configured yet. Click 'Add Device' or sniff in Sniffer / IR!",
@@ -1259,6 +1469,12 @@ const i18n = {
     man_reps: "Repeat Transmissions",
     single_burst: "🚀 Single Burst",
     save_preset: "💾 Save to Dashboard",
+    man_ir_title: "Manual IR Remote & Transmitter",
+    man_ir_proto: "Protocol",
+    man_ir_code: "IR Code (Hex or Decimal)",
+    man_ir_bits: "Bit Length",
+    man_ir_reps: "Repeat Bursts",
+    single_ir_burst: "Transmit IR",
     fuzzer_title: "Sub-GHz Fuzzer / Brute-Force",
     fuzzer_desc: "Fast Sub-GHz protocol sweep, 12-bit / 10-bit gate brute-forcing, and frequency range fuzzer (Flipper Zero style).",
     fuzz_profile: "Fuzzer Profile",
@@ -1292,7 +1508,11 @@ const i18n = {
     tab_sniff: "Rastreador",
     tab_manual: "Manual",
     tab_fuzzer: "Fuzzer",
-    tab_wiring: "Ligações e Sobre",
+    tab_setup: "Setup",
+    tab_wiring: "Setup",
+    setup_title: "Guia de Setup e Pinout",
+    add_container: "Adicionar Painel",
+    edit_container: "Editar Painel",
     tab_settings: "Definições",
     cat_all: "Todos",
     cat_gate: "Portão",
@@ -1304,7 +1524,7 @@ const i18n = {
     cat_audio: "Áudio",
     cat_fan: "Ventoinha",
     cat_other: "Outro",
-    dash_title: "Painel Domótica e Comandos",
+    dash_title: "Painel Domótica",
     add_device: "Adicionar Equipamento",
     refresh: "Atualizar",
     no_presets: "Nenhum equipamento configurado. Prima 'Adicionar Equipamento' ou grave via Rastreador / IR!",
@@ -1321,6 +1541,12 @@ const i18n = {
     man_reps: "Repetições",
     single_burst: "🚀 Disparo Único",
     save_preset: "💾 Guardar no Painel",
+    man_ir_title: "Comando e Emulação IR Manual",
+    man_ir_proto: "Protocolo",
+    man_ir_code: "Código IR (Hex ou Decimal)",
+    man_ir_bits: "Tamanho de Bits",
+    man_ir_reps: "Repetições",
+    single_ir_burst: "Disparar IR",
     fuzzer_title: "Fuzzer Sub-GHz / Força Bruta",
     fuzzer_desc: "Varrimento rápido de protocolos, força bruta de portões e scanner de frequências (estilo Flipper Zero).",
     fuzz_profile: "Perfil do Fuzzer",
@@ -1346,7 +1572,7 @@ const i18n = {
     code_set_label: "Conjunto",
     test_power: "Testar Ligar/Desl.",
     cycle_next: "Próximo & Testar",
-    auto_scan: "Varrimento Auto"
+    auto_scan: "Varrimento Automático"
   }
 };
 
@@ -1457,8 +1683,10 @@ async function fetchStatus() {
       ccBadge.innerHTML = '<span>●</span> CC1101: Offline';
     }
 
-    document.getElementById('b-freq').innerText = data.rf_freq.toFixed(2) + ' MHz';
-    document.getElementById('sniff-freq-txt').innerText = data.rf_freq.toFixed(2) + ' MHz';
+    const bFreq = document.getElementById('b-freq');
+    if (bFreq) bFreq.innerText = data.rf_freq.toFixed(2) + ' MHz';
+    const sniffFreq = document.getElementById('sniff-freq-txt');
+    if (sniffFreq) sniffFreq.innerText = data.rf_freq.toFixed(2) + ' MHz';
 
     const stBadge = document.getElementById('b-stream');
     if (data.is_streaming) {
@@ -1503,85 +1731,211 @@ function getCatIcon(cat) {
   }
 }
 
+function saveDashContainers() {
+  localStorage.setItem('gk_dash_containers', JSON.stringify(dashContainers));
+}
+
+function openAddContainerModal() {
+  haptic();
+  document.getElementById('container-modal-title').innerText = i18n[currentLang].add_container || 'Add Dashboard Container';
+  document.getElementById('cont-id').value = '';
+  document.getElementById('cont-name').value = '';
+  document.getElementById('cont-icon').value = '🏠';
+  document.getElementById('cont-filter').value = 'All';
+  document.getElementById('container-modal').classList.add('open');
+}
+
+function openEditContainerModal(id) {
+  haptic();
+  const c = dashContainers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('container-modal-title').innerText = i18n[currentLang].edit_container || 'Edit Container';
+  document.getElementById('cont-id').value = c.id;
+  document.getElementById('cont-name').value = c.name;
+  document.getElementById('cont-icon').value = c.icon || '🏠';
+  document.getElementById('cont-filter').value = c.filter || 'All';
+  document.getElementById('container-modal').classList.add('open');
+}
+
+function closeContainerModal() {
+  document.getElementById('container-modal').classList.remove('open');
+}
+
+function saveContainerSubmit(e) {
+  e.preventDefault();
+  haptic();
+  const id = document.getElementById('cont-id').value;
+  const name = document.getElementById('cont-name').value.trim();
+  const icon = document.getElementById('cont-icon').value;
+  const filter = document.getElementById('cont-filter').value;
+  if (!name) return;
+
+  if (id) {
+    const idx = dashContainers.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      dashContainers[idx].name = name;
+      dashContainers[idx].icon = icon;
+      dashContainers[idx].filter = filter;
+    }
+  } else {
+    dashContainers.push({
+      id: 'c_' + Date.now(),
+      name: name,
+      icon: icon,
+      filter: filter
+    });
+  }
+  saveDashContainers();
+  closeContainerModal();
+  renderQuickPresets(loadedPresets);
+  showToast('Container saved');
+}
+
+function deleteContainer(id) {
+  haptic();
+  if (dashContainers.length <= 1) {
+    showToast('Cannot delete the last remaining container');
+    return;
+  }
+  if (!confirm('Delete this dashboard container?')) return;
+  dashContainers = dashContainers.filter(x => x.id !== id);
+  saveDashContainers();
+  renderQuickPresets(loadedPresets);
+  showToast('Container deleted');
+}
+
+function setContainerFilter(containerId, cat) {
+  haptic();
+  containerActiveChips[containerId] = cat;
+  renderQuickPresets(loadedPresets);
+}
+
 function renderQuickPresets(presets) {
-  const container = document.getElementById('quick-presets-container');
-  if (!presets || presets.length === 0) {
-    container.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">${i18n[currentLang].no_presets}</p>`;
-    return;
-  }
+  const root = document.getElementById('dash-containers-root');
+  if (!root) return;
+  if (!presets) presets = loadedPresets || [];
 
-  const filtered = (selectedCatFilter === 'All') 
-    ? presets 
-    : presets.filter(p => (p.cat || 'Gate') === selectedCatFilter);
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No items in category "${selectedCatFilter}".</p>`;
-    return;
-  }
+  const categories = [
+    { key: 'All', label: i18n[currentLang].cat_all || 'All', icon: '⚡' },
+    { key: 'Gate', label: i18n[currentLang].cat_gate || 'Gate', icon: '🚪' },
+    { key: 'Garage', label: i18n[currentLang].cat_garage || 'Garage', icon: '🚘' },
+    { key: 'Lighting', label: i18n[currentLang].cat_lighting || 'Lighting', icon: '💡' },
+    { key: 'Blinds', label: i18n[currentLang].cat_blinds || 'Blinds', icon: '🪟' },
+    { key: 'AC', label: i18n[currentLang].cat_ac || 'AC', icon: '❄️' },
+    { key: 'TV', label: i18n[currentLang].cat_tv || 'TV', icon: '📺' },
+    { key: 'Audio', label: i18n[currentLang].cat_audio || 'Audio', icon: '🔊' },
+    { key: 'Fan', label: i18n[currentLang].cat_fan || 'Fan', icon: '🌀' },
+    { key: 'Other', label: i18n[currentLang].cat_other || 'Other', icon: '⚡' }
+  ];
 
   let html = '';
-  filtered.forEach(p => {
-    const icon = getCatIcon(p.cat);
-    const isIR = (p.type === 1);
-    const typeLabel = isIR ? '🔦 IR 38kHz' : '📡 RF 433MHz';
-    const hexCode = '0x' + p.code.toString(16).toUpperCase();
+  dashContainers.forEach((c) => {
+    const activeCat = containerActiveChips[c.id] || c.filter || 'All';
 
-    if (p.toggle) {
-      const isOn = p.state;
-      const stateTxt = isOn ? 'ON' : 'OFF';
-      html += `
-        <div class="preset-box">
-          <div class="preset-meta-header">
-            <span class="cat-badge">${icon} ${p.cat || 'Automation'}</span>
-            <span class="type-badge">${typeLabel}</span>
-          </div>
-          <button class="btn-toggle ${isOn ? 'on' : 'off'}" onclick="triggerPreset(${p.id}, '${p.name}')">
-            <span>${p.name.toUpperCase()}</span>
-            <span class="toggle-switch-pill">${stateTxt}</span>
-          </button>
-          <div class="preset-card-footer">
-            <span>${hexCode} • ${p.reps || 1}x</span>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})">✏</button>
-              <button class="btn btn-danger btn-sm" onclick="deletePreset(${p.id})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `;
+    const filtered = (activeCat === 'All') 
+      ? presets 
+      : presets.filter(p => (p.cat || 'Gate') === activeCat);
+
+    let chipsHtml = '';
+    categories.forEach(cat => {
+      const isActive = (cat.key === activeCat) ? ' active' : '';
+      chipsHtml += `<button class="cat-chip${isActive}" onclick="setContainerFilter('${c.id}', '${cat.key}')">${cat.icon} ${cat.label}</button>`;
+    });
+
+    let presetsHtml = '';
+    if (filtered.length === 0) {
+      presetsHtml = `<p style="color:var(--muted); text-align:center; padding: 20px;">No devices found in "${activeCat}". Click '➕ Add Device' to add.</p>`;
     } else {
-      html += `
-        <div class="preset-box">
-          <div class="preset-meta-header">
-            <span class="cat-badge">${icon} ${p.cat || 'Gate'}</span>
-            <span class="type-badge">${typeLabel}</span>
-          </div>
-          <button class="btn btn-gate" onclick="triggerPreset(${p.id}, '${p.name}')">
-            <span>${icon} ${currentLang === 'pt' ? 'ACIONAR' : 'TRIGGER'} ${p.name.toUpperCase()}</span>
-            <span style="font-size:0.72rem; font-weight:400; opacity:0.85;">
-              ${hexCode} | ${isIR ? 'IR' : p.freq + ' MHz'} | ${p.reps}x
-            </span>
-          </button>
-          <button class="btn btn-stream"
-                  data-id="${p.id}"
-                  onmousedown="startStreamPreset(${p.id}, this)"
-                  onmouseup="stopStreamPreset(this)"
-                  onmouseleave="stopStreamPreset(this)"
-                  ontouchstart="startStreamPreset(${p.id}, this, event)"
-                  ontouchend="stopStreamPreset(this, event)">
-            🔴 HOLD TO STREAM (Continuous Burst)
-          </button>
-          <div class="preset-card-footer">
-            <span>${isIR ? 'IR Infrared' : p.freq + ' MHz'}</span>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})">✏</button>
-              <button class="btn btn-danger btn-sm" onclick="deletePreset(${p.id})">🗑</button>
+      filtered.forEach(p => {
+        const icon = getCatIcon(p.cat);
+        const isIR = (p.type === 1);
+        const typeLabel = isIR ? '🔦 IR 38kHz' : '📡 RF 433MHz';
+        const hexCode = '0x' + p.code.toString(16).toUpperCase();
+
+        if (p.toggle) {
+          const isOn = p.state;
+          const stateTxt = isOn ? 'ON' : 'OFF';
+          presetsHtml += `
+            <div class="preset-box">
+              <div class="preset-meta-header">
+                <span class="cat-badge">${icon} ${p.cat || 'Automation'}</span>
+                <span class="type-badge">${typeLabel}</span>
+              </div>
+              <button class="btn-toggle ${isOn ? 'on' : 'off'}" onclick="triggerPreset(${p.id}, '${p.name}')">
+                <span>${p.name.toUpperCase()}</span>
+                <span class="toggle-switch-pill">${stateTxt}</span>
+              </button>
+              <div class="preset-card-footer">
+                <span>${hexCode} • ${p.reps || 1}x</span>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})">✏</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletePreset(${p.id})">🗑</button>
+                </div>
+              </div>
             </div>
+          `;
+        } else {
+          presetsHtml += `
+            <div class="preset-box">
+              <div class="preset-meta-header">
+                <span class="cat-badge">${icon} ${p.cat || 'Gate'}</span>
+                <span class="type-badge">${typeLabel}</span>
+              </div>
+              <button class="btn btn-gate" onclick="triggerPreset(${p.id}, '${p.name}')">
+                <span>${icon} ${currentLang === 'pt' ? 'ACIONAR' : 'TRIGGER'} ${p.name.toUpperCase()}</span>
+                <span style="font-size:0.72rem; font-weight:400; opacity:0.85;">
+                  ${hexCode} | ${isIR ? 'IR' : p.freq + ' MHz'} | ${p.reps}x
+                </span>
+              </button>
+              <button class="btn btn-stream"
+                      data-id="${p.id}"
+                      onmousedown="startStreamPreset(${p.id}, this)"
+                      onmouseup="stopStreamPreset(this)"
+                      onmouseleave="stopStreamPreset(this)"
+                      ontouchstart="startStreamPreset(${p.id}, this, event)"
+                      ontouchend="stopStreamPreset(this, event)">
+                🔴 HOLD TO STREAM (Continuous Burst)
+              </button>
+              <div class="preset-card-footer">
+                <span>${isIR ? 'IR Infrared' : p.freq + ' MHz'}</span>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-outline btn-sm" onclick="openEditModal(${p.id})">✏</button>
+                  <button class="btn btn-danger btn-sm" onclick="deletePreset(${p.id})">🗑</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      });
+    }
+
+    const deleteBtn = (dashContainers.length > 1) 
+      ? `<button class="btn btn-danger btn-sm" onclick="deleteContainer('${c.id}')" title="Delete Container">🗑</button>`
+      : '';
+
+    html += `
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span class="card-title">
+            <span>${c.icon || '🏠'}</span>
+            <span>${c.name}</span>
+          </span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="openEditContainerModal('${c.id}')" title="Edit Container">✏</button>
+            ${deleteBtn}
           </div>
         </div>
-      `;
-    }
+        <div class="cat-scroll" style="margin-bottom:12px;">
+          ${chipsHtml}
+        </div>
+        <div class="preset-grid">
+          ${presetsHtml}
+        </div>
+      </div>
+    `;
   });
-  container.innerHTML = html;
+
+  root.innerHTML = html;
 }
 
 // Add Device Modal
@@ -2006,6 +2360,35 @@ function promptSaveIRPreset(code, proto, bits, rawArr) {
 // Appliance Combobox & Keypad
 let currentCodeSetIdx = 0;
 let autoScanInterval = null;
+let customTvPresets = {};
+
+function loadCustomTvPresets() {
+  try {
+    customTvPresets = JSON.parse(localStorage.getItem('gk_custom_tv_presets') || '{}');
+    if (!IR_APPLIANCES.tv) IR_APPLIANCES.tv = {};
+    for (const k in customTvPresets) {
+      IR_APPLIANCES.tv[k] = customTvPresets[k];
+    }
+  } catch(e) {
+    customTvPresets = {};
+  }
+}
+
+function saveCustomTvPresets() {
+  localStorage.setItem('gk_custom_tv_presets', JSON.stringify(customTvPresets));
+}
+
+function updateTvPresetControls() {
+  const appType = document.getElementById('ir-appliance-type')?.value;
+  const brandKey = document.getElementById('ir-brand-select')?.value;
+  const delBtn = document.getElementById('btn-delete-tv-preset');
+  if (!delBtn) return;
+  if (appType === 'tv' && customTvPresets[brandKey]) {
+    delBtn.style.display = 'inline-block';
+  } else {
+    delBtn.style.display = 'none';
+  }
+}
 
 function onApplianceTypeChanged(appType) {
   const brandSel = document.getElementById('ir-brand-select');
@@ -2020,6 +2403,7 @@ function onApplianceTypeChanged(appType) {
   currentCodeSetIdx = 0;
   stopAutoScanner();
   updateCodeSetOptions();
+  updateTvPresetControls();
   renderApplianceKeypad();
 }
 
@@ -2027,6 +2411,7 @@ function onBrandChanged() {
   currentCodeSetIdx = 0;
   stopAutoScanner();
   updateCodeSetOptions();
+  updateTvPresetControls();
   renderApplianceKeypad();
 }
 
@@ -2157,10 +2542,349 @@ function stopAutoScanner() {
   if (statusEl) statusEl.style.display = 'none';
 }
 
+// TV Preset Management (Create / Replace / Delete)
+function openCreateTvPresetModal() {
+  haptic();
+  document.getElementById('tv-preset-modal-title').innerText = 'Create TV Preset';
+  document.getElementById('tv-preset-mode').value = 'create';
+  document.getElementById('tv-preset-name').value = '';
+  document.getElementById('tv-preset-template').value = 'current';
+  document.getElementById('tv-preset-proto').value = 'NEC';
+  document.getElementById('tv-preset-bits').value = 32;
+  document.getElementById('tv-preset-modal').classList.add('open');
+}
+
+function openReplaceTvPresetModal() {
+  haptic();
+  const brandKey = document.getElementById('ir-brand-select').value;
+  const brandData = IR_APPLIANCES.tv?.[brandKey];
+  const name = brandData ? brandData.name : 'Custom TV';
+  document.getElementById('tv-preset-modal-title').innerText = `Replace / Clone "${name}"`;
+  document.getElementById('tv-preset-mode').value = 'replace';
+  document.getElementById('tv-preset-name').value = name;
+  document.getElementById('tv-preset-template').value = 'current';
+  document.getElementById('tv-preset-proto').value = 'NEC';
+  document.getElementById('tv-preset-bits').value = 32;
+  document.getElementById('tv-preset-modal').classList.add('open');
+}
+
+function closeTvPresetModal() {
+  document.getElementById('tv-preset-modal').classList.remove('open');
+}
+
+function saveTvPresetSubmit(e) {
+  e.preventDefault();
+  haptic();
+  const mode = document.getElementById('tv-preset-mode').value;
+  const name = document.getElementById('tv-preset-name').value.trim();
+  const tpl = document.getElementById('tv-preset-template').value;
+  const proto = document.getElementById('tv-preset-proto').value;
+  const bits = parseInt(document.getElementById('tv-preset-bits').value) || 32;
+  if (!name) return;
+
+  const currentBrandKey = document.getElementById('ir-brand-select').value;
+  let newKey = (mode === 'replace' && customTvPresets[currentBrandKey]) 
+    ? currentBrandKey 
+    : ('custom_tv_' + Date.now());
+
+  let baseKeys = [];
+  if (tpl === 'current') {
+    const activeSet = IR_APPLIANCES.tv?.[currentBrandKey]?.sets?.[currentCodeSetIdx] || IR_APPLIANCES.tv?.[currentBrandKey]?.sets?.[0];
+    if (activeSet && activeSet.keys) {
+      baseKeys = JSON.parse(JSON.stringify(activeSet.keys));
+    }
+  } else if (tpl === 'empty') {
+    baseKeys = [];
+  } else if (IR_APPLIANCES.tv?.[tpl]?.sets?.[0]?.keys) {
+    baseKeys = JSON.parse(JSON.stringify(IR_APPLIANCES.tv[tpl].sets[0].keys));
+  }
+
+  const presetObj = {
+    name: name,
+    sets: [
+      {
+        name: `${name} (Layout)`,
+        proto: proto,
+        bits: bits,
+        keys: baseKeys
+      }
+    ]
+  };
+
+  customTvPresets[newKey] = presetObj;
+  IR_APPLIANCES.tv[newKey] = presetObj;
+  saveCustomTvPresets();
+
+  closeTvPresetModal();
+  onApplianceTypeChanged('tv');
+  document.getElementById('ir-brand-select').value = newKey;
+  onBrandChanged();
+  showToast(`TV Preset "${name}" saved!`);
+}
+
+function deleteActiveTvPreset() {
+  haptic();
+  const brandKey = document.getElementById('ir-brand-select').value;
+  if (!customTvPresets[brandKey]) {
+    showToast('Only custom presets can be deleted.');
+    return;
+  }
+  const name = customTvPresets[brandKey].name;
+  if (!confirm(`Are you sure you want to delete TV preset "${name}"?`)) return;
+
+  delete customTvPresets[brandKey];
+  delete IR_APPLIANCES.tv[brandKey];
+  saveCustomTvPresets();
+
+  onApplianceTypeChanged('tv');
+  showToast(`Preset "${name}" deleted.`);
+}
+
+function ensureCurrentPresetIsCustom() {
+  const brandKey = document.getElementById('ir-brand-select').value;
+  if (customTvPresets[brandKey]) return brandKey;
+
+  const brandData = IR_APPLIANCES.tv[brandKey];
+  const newKey = 'custom_tv_' + Date.now();
+  const cloned = JSON.parse(JSON.stringify(brandData));
+  cloned.name = cloned.name + ' (Custom)';
+  customTvPresets[newKey] = cloned;
+  IR_APPLIANCES.tv[newKey] = cloned;
+  saveCustomTvPresets();
+
+  onApplianceTypeChanged('tv');
+  document.getElementById('ir-brand-select').value = newKey;
+  onBrandChanged();
+  return newKey;
+}
+
+// Button Assignments & Modal Controls
+function onTvBtnProtoChange(proto) {
+  const isRaw = (proto === 'Raw');
+  document.getElementById('grp-tv-btn-code').style.display = isRaw ? 'none' : 'block';
+  document.getElementById('grp-tv-btn-raw').style.display = isRaw ? 'block' : 'none';
+}
+
+function openAddButtonModal() {
+  haptic();
+  stopButtonRecording();
+  currentEditingKeyIdx = -1;
+  recordedModalRaw = null;
+  document.getElementById('tv-btn-idx').value = -1;
+  document.getElementById('tv-btn-modal-title').innerText = 'Add Remote Button';
+  document.getElementById('tv-btn-name').value = '';
+  document.getElementById('tv-btn-proto').value = 'NEC';
+  document.getElementById('tv-btn-bits').value = 32;
+  document.getElementById('tv-btn-code').value = '';
+  document.getElementById('tv-btn-raw').value = '';
+  document.getElementById('tv-btn-record-status').innerText = '';
+  onTvBtnProtoChange('NEC');
+  document.getElementById('tv-button-modal').classList.add('open');
+}
+
+function openEditButtonModal(keyIdx) {
+  haptic();
+  stopButtonRecording();
+  currentEditingKeyIdx = keyIdx;
+  recordedModalRaw = null;
+
+  const appType = document.getElementById('ir-appliance-type').value;
+  const brandKey = document.getElementById('ir-brand-select').value;
+  const setObj = IR_APPLIANCES[appType]?.[brandKey]?.sets?.[currentCodeSetIdx] || IR_APPLIANCES[appType]?.[brandKey]?.sets?.[0];
+  if (!setObj || !setObj.keys || !setObj.keys[keyIdx]) return;
+
+  const k = setObj.keys[keyIdx];
+  const kName = k[0];
+  const kCode = k[1];
+  const kProto = setObj.proto || 'NEC';
+  const kBits = setObj.bits || 32;
+  const kRaw = k[3] || null;
+
+  document.getElementById('tv-btn-idx').value = keyIdx;
+  document.getElementById('tv-btn-modal-title').innerText = `Edit Button: "${kName}"`;
+  document.getElementById('tv-btn-name').value = kName;
+  document.getElementById('tv-btn-proto').value = kProto;
+  document.getElementById('tv-btn-bits').value = kBits;
+  document.getElementById('tv-btn-code').value = '0x' + (typeof kCode === 'number' ? kCode.toString(16).toUpperCase() : kCode);
+  document.getElementById('tv-btn-raw').value = kRaw ? kRaw.join(', ') : '';
+  document.getElementById('tv-btn-record-status').innerText = '';
+  onTvBtnProtoChange(kProto);
+  document.getElementById('tv-button-modal').classList.add('open');
+}
+
+function closeTvButtonModal() {
+  stopButtonRecording();
+  document.getElementById('tv-button-modal').classList.remove('open');
+}
+
+function deleteKeyFromPreset(keyIdx) {
+  haptic();
+  if (!confirm('Delete this button from the remote?')) return;
+  const appType = document.getElementById('ir-appliance-type').value;
+  if (appType === 'tv') {
+    ensureCurrentPresetIsCustom();
+  }
+  const brandKey = document.getElementById('ir-brand-select').value;
+  const setObj = IR_APPLIANCES[appType]?.[brandKey]?.sets?.[currentCodeSetIdx] || IR_APPLIANCES[appType]?.[brandKey]?.sets?.[0];
+  if (!setObj || !setObj.keys) return;
+
+  setObj.keys.splice(keyIdx, 1);
+  if (appType === 'tv' && customTvPresets[brandKey]) {
+    saveCustomTvPresets();
+  }
+  renderApplianceKeypad();
+  showToast('Button deleted');
+}
+
+function saveTvButtonSubmit(e) {
+  e.preventDefault();
+  haptic();
+  const name = document.getElementById('tv-btn-name').value.trim();
+  const proto = document.getElementById('tv-btn-proto').value;
+  const bits = parseInt(document.getElementById('tv-btn-bits').value) || 32;
+  const isRaw = (proto === 'Raw');
+  let code = 0;
+  let rawArr = null;
+
+  if (isRaw) {
+    const rawStr = document.getElementById('tv-btn-raw').value.trim();
+    if (rawStr) {
+      rawArr = rawStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+    }
+    if (!rawArr || rawArr.length === 0) {
+      showToast('Please enter or record raw pulse timings');
+      return;
+    }
+  } else {
+    code = parseCode(document.getElementById('tv-btn-code').value);
+    if (isNaN(code) || code === 0) {
+      showToast('Please enter a valid code or record from remote');
+      return;
+    }
+  }
+
+  const appType = document.getElementById('ir-appliance-type').value;
+  let brandKey = document.getElementById('ir-brand-select').value;
+  if (appType === 'tv') {
+    brandKey = ensureCurrentPresetIsCustom();
+  }
+
+  const setObj = IR_APPLIANCES[appType]?.[brandKey]?.sets?.[currentCodeSetIdx] || IR_APPLIANCES[appType]?.[brandKey]?.sets?.[0];
+  if (!setObj) return;
+
+  const keyData = [name, code, 0];
+  if (rawArr) keyData.push(rawArr);
+
+  if (currentEditingKeyIdx >= 0 && currentEditingKeyIdx < setObj.keys.length) {
+    setObj.keys[currentEditingKeyIdx] = keyData;
+    showToast(`Button "${name}" updated!`);
+  } else {
+    setObj.keys.push(keyData);
+    showToast(`Button "${name}" added!`);
+  }
+
+  if (appType === 'tv' && customTvPresets[brandKey]) {
+    saveCustomTvPresets();
+  }
+
+  closeTvButtonModal();
+  renderApplianceKeypad();
+}
+
+function testModalButtonIR() {
+  haptic(50);
+  const proto = document.getElementById('tv-btn-proto').value;
+  const bits = parseInt(document.getElementById('tv-btn-bits').value) || 32;
+  if (proto === 'Raw') {
+    const rawStr = document.getElementById('tv-btn-raw').value.trim();
+    const rawArr = rawStr ? rawStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0) : null;
+    if (rawArr && rawArr.length > 0) {
+      fireRawIR(rawArr, 2);
+    } else {
+      showToast('No raw timings entered');
+    }
+  } else {
+    const code = parseCode(document.getElementById('tv-btn-code').value);
+    if (!isNaN(code) && code !== 0) {
+      fireIR(code, proto, bits, 2);
+    } else {
+      showToast('Enter a valid code first');
+    }
+  }
+}
+
+// Hardware Recording for Button in Modal
+function toggleButtonRecording() {
+  if (isButtonRecording) {
+    stopButtonRecording();
+  } else {
+    startButtonRecording();
+  }
+}
+
+async function startButtonRecording() {
+  haptic(50);
+  isButtonRecording = true;
+  const btn = document.getElementById('btn-tv-btn-record');
+  const stat = document.getElementById('tv-btn-record-status');
+  if (btn) {
+    btn.className = 'btn btn-danger btn-sm';
+    btn.innerText = '⏹ Stop Recording';
+  }
+  if (stat) {
+    stat.style.color = 'var(--primary)';
+    stat.innerText = 'Listening on GPIO0... Aim remote and press button now!';
+  }
+
+  try {
+    await fetch('/api/ir/listen/start', { method: 'POST' });
+    await fetch('/api/ir/clear', { method: 'POST' });
+  } catch(e) {}
+
+  if (btnRecordInterval) clearInterval(btnRecordInterval);
+  btnRecordInterval = setInterval(async () => {
+    try {
+      const res = await fetch('/api/ir/latest');
+      const data = await res.json();
+      if (data.ready) {
+        haptic(100);
+        document.getElementById('tv-btn-proto').value = data.proto || 'NEC';
+        document.getElementById('tv-btn-bits').value = data.bits || 32;
+        document.getElementById('tv-btn-code').value = data.hex || ('0x' + data.code.toString(16).toUpperCase());
+        if (data.raw && data.raw.length > 0) {
+          recordedModalRaw = data.raw;
+          document.getElementById('tv-btn-raw').value = data.raw.join(', ');
+        }
+        if (stat) {
+          stat.style.color = 'var(--success)';
+          stat.innerText = `Captured: ${data.proto} ${data.hex} (${data.bits} bits)!`;
+        }
+        showToast(`Captured: ${data.hex}`);
+        stopButtonRecording();
+      }
+    } catch(e) {}
+  }, 400);
+}
+
+function stopButtonRecording() {
+  if (btnRecordInterval) {
+    clearInterval(btnRecordInterval);
+    btnRecordInterval = null;
+  }
+  isButtonRecording = false;
+  const btn = document.getElementById('btn-tv-btn-record');
+  if (btn) {
+    btn.className = 'btn btn-warning btn-sm';
+    btn.innerText = '🔴 Record from Remote';
+  }
+  fetch('/api/ir/listen/stop', { method: 'POST' }).catch(()=>{});
+}
+
 function renderApplianceKeypad() {
   const appType = document.getElementById('ir-appliance-type').value;
   const brandKey = document.getElementById('ir-brand-select').value;
   const container = document.getElementById('appliance-keypad-container');
+  if (!container) return;
   container.innerHTML = '';
 
   const brandData = IR_APPLIANCES[appType]?.[brandKey];
@@ -2180,19 +2904,36 @@ function renderApplianceKeypad() {
   };
   const cat = categoryMap[appType] || 'Other';
 
-  setObj.keys.forEach(k => {
+  if (!setObj.keys || setObj.keys.length === 0) {
+    container.innerHTML = `<p style="color:var(--muted); text-align:center; grid-column: 1 / -1; padding: 20px;">No buttons in this preset yet. Click '➕ Add Button' above to add or record buttons!</p>`;
+    return;
+  }
+
+  setObj.keys.forEach((k, idx) => {
     const kName = k[0];
     const kCode = k[1];
     const kToggle = k[2] === 1;
-    const hexStr = '0x' + kCode.toString(16).toUpperCase();
+    const kRaw = k[3] || null;
+    const hexStr = (typeof kCode === 'number') ? ('0x' + kCode.toString(16).toUpperCase()) : kCode;
     const keyBox = document.createElement('div');
     keyBox.className = 'ir-key-box';
+    
+    const fireAction = (kRaw && kRaw.length > 0) 
+      ? `fireRawIR([${kRaw.join(',')}], 2)`
+      : `fireIR(${kCode}, '${setObj.proto}', ${setObj.bits})`;
+
     keyBox.innerHTML = `
-      <span class="ir-key-name">${kName}</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span class="ir-key-name">${kName}</span>
+        <div style="display:flex; gap:4px;">
+          <button class="btn btn-outline btn-sm" style="padding:2px 6px; font-size:0.75rem;" onclick="openEditButtonModal(${idx})" title="Edit / Record Button">✏</button>
+          <button class="btn btn-danger btn-sm" style="padding:2px 6px; font-size:0.75rem;" onclick="deleteKeyFromPreset(${idx})" title="Delete Button">🗑</button>
+        </div>
+      </div>
       <span class="ir-key-hex">${setObj.proto} ${setObj.bits}b • ${hexStr}</span>
-      <div class="ir-key-actions">
-        <button class="btn btn-primary btn-sm" onclick="fireIR(${kCode}, '${setObj.proto}', ${setObj.bits})">▶</button>
-        <button class="btn btn-outline btn-sm" title="Add to Dashboard" onclick="quickSaveIRPreset('${brandData.name} ${kName}', ${kCode}, '${cat}', ${kToggle ? 'true' : 'false'}, 0, '${setObj.proto}', ${setObj.bits})">➕</button>
+      <div class="ir-key-actions" style="margin-top:6px;">
+        <button class="btn btn-primary btn-sm" onclick="${fireAction}">▶ Fire</button>
+        <button class="btn btn-outline btn-sm" title="Add to Dashboard" onclick="quickSaveIRPreset('${brandData.name} ${kName}', ${kCode}, '${cat}', ${kToggle ? 'true' : 'false'}, 0, '${setObj.proto}', ${setObj.bits})">➕ Dashboard</button>
       </div>
     `;
     container.appendChild(keyBox);
@@ -2367,6 +3108,111 @@ function saveManualAsPreset() {
     toggle: false,
     code_off: 0
   });
+}
+
+// Manual IR Emulation & Recording
+async function transmitManualIR(e) {
+  e.preventDefault();
+  haptic(50);
+  const proto = document.getElementById('man-ir-proto').value;
+  const bits = parseInt(document.getElementById('man-ir-bits').value) || 32;
+  const reps = parseInt(document.getElementById('man-ir-repeats').value) || 3;
+
+  if (proto === 'Raw') {
+    const rawStr = document.getElementById('man-ir-raw').value.trim();
+    const rawArr = rawStr ? rawStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0) : null;
+    if (rawArr && rawArr.length > 0) {
+      fireRawIR(rawArr, reps);
+    } else {
+      showToast('Enter valid raw pulse timings');
+    }
+  } else {
+    const code = parseCode(document.getElementById('man-ir-code').value);
+    if (!isNaN(code) && code !== 0) {
+      fireIR(code, proto, bits, reps);
+    } else {
+      showToast('Enter a valid IR code');
+    }
+  }
+}
+
+let isManIrRecording = false;
+let manIrRecordInterval = null;
+
+async function recordManualIR() {
+  haptic(50);
+  const btn = document.getElementById('btn-man-ir-record');
+  if (isManIrRecording) {
+    if (manIrRecordInterval) clearInterval(manIrRecordInterval);
+    isManIrRecording = false;
+    btn.className = 'btn btn-warning';
+    btn.innerText = '🔴 Record IR';
+    fetch('/api/ir/listen/stop', { method: 'POST' }).catch(()=>{});
+    return;
+  }
+
+  isManIrRecording = true;
+  btn.className = 'btn btn-danger';
+  btn.innerText = '⏹ Stop Listening';
+  showToast('Listening for IR on GPIO0... Press button on remote');
+
+  try {
+    await fetch('/api/ir/listen/start', { method: 'POST' });
+    await fetch('/api/ir/clear', { method: 'POST' });
+  } catch(e) {}
+
+  if (manIrRecordInterval) clearInterval(manIrRecordInterval);
+  manIrRecordInterval = setInterval(async () => {
+    try {
+      const res = await fetch('/api/ir/latest');
+      const data = await res.json();
+      if (data.ready) {
+        haptic(100);
+        document.getElementById('man-ir-proto').value = data.proto || 'NEC';
+        document.getElementById('man-ir-bits').value = data.bits || 32;
+        document.getElementById('man-ir-code').value = data.hex || ('0x' + data.code.toString(16).toUpperCase());
+        if (data.raw && data.raw.length > 0) {
+          document.getElementById('man-ir-raw').value = data.raw.join(', ');
+        }
+        showToast(`Captured IR: ${data.hex}`);
+        if (manIrRecordInterval) clearInterval(manIrRecordInterval);
+        isManIrRecording = false;
+        btn.className = 'btn btn-warning';
+        btn.innerText = '🔴 Record IR';
+        fetch('/api/ir/listen/stop', { method: 'POST' }).catch(()=>{});
+      }
+    } catch(e) {}
+  }, 400);
+}
+
+function saveManualIRAsPreset() {
+  haptic();
+  const proto = document.getElementById('man-ir-proto').value;
+  const bits = parseInt(document.getElementById('man-ir-bits').value) || 32;
+  const isRaw = (proto === 'Raw');
+  let code = 0;
+  let rawArr = null;
+
+  if (isRaw) {
+    const rawStr = document.getElementById('man-ir-raw').value.trim();
+    if (rawStr) {
+      rawArr = rawStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+    }
+    if (!rawArr || rawArr.length === 0) {
+      showToast('Enter valid raw timings first');
+      return;
+    }
+  } else {
+    code = parseCode(document.getElementById('man-ir-code').value);
+    if (isNaN(code) || code === 0) {
+      showToast('Enter a valid code first');
+      return;
+    }
+  }
+
+  const name = prompt('Name for this IR device:', 'Manual IR Device');
+  if (!name) return;
+  quickSaveIRPreset(name, code, 'Other', false, 0, proto, bits, rawArr);
 }
 
 // Fuzzer
@@ -2625,6 +3471,7 @@ function switchQrMode(mode) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  loadCustomTvPresets();
   applyLanguage();
   onApplianceTypeChanged('tv');
   fetchStatus();

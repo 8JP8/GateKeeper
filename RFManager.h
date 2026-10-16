@@ -109,6 +109,9 @@ private:
   float currentFreq;
   int8_t currentPower;
   bool cc1101Ok;
+  uint32_t lastHealthCheckTime;
+  uint8_t healthyCount;
+  uint8_t unhealthyCount;
 
   RecordedSignal signalBuffer[MAX_RECORDED_SIGNALS];
   int signalCount;
